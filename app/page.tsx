@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const C = {
   bg:"#0a0a0a", surface:"#111111", surface2:"#161616", surface3:"#1c1c1c", surface4:"#222222",
@@ -9,9 +9,7 @@ const C = {
   accent:"#d4a843", accentDim:"rgba(212,168,67,0.12)", accentMid:"rgba(212,168,67,0.22)",
 };
 
-// ── All inline SVG icons — no webfont dependency ──────────────────────────────
 const ICONS = {
-  // nav
   chat: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   library: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
   projects: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
@@ -19,12 +17,10 @@ const ICONS = {
   history: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg>,
   bookmarks: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>,
   discover: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
-  // header
   sidebarRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
   keyboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="10"/><line x1="10" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="14" y2="10"/><line x1="18" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg>,
   settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   user: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  // input
   paperclip: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>,
   image: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
   mic: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
@@ -37,37 +33,31 @@ const ICONS = {
   refresh: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
   thumbUp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>,
   thumbDown: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>,
-  // sources panel
   upload: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>,
   books: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="6" x2="16" y2="6"/><line x1="12" y1="10" x2="16" y2="10"/></svg>,
   fileText: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
   globe: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   bulb: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>,
   trending: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-  // action tools
   headphones: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>,
   notebook: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
   faq: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   timeline: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
   video: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
-  // input tags
   telescope: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M2 12l4-4 4 4"/><path d="M22 8l-4 4-4-4"/><line x1="12" y1="14" x2="12" y2="22"/></svg>,
   doc: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
   atom: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5z"/></svg>,
   code: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
   cpu: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>,
-  // settings tabs
   adjustments: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>,
   palette: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>,
   shield: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
   bell: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
   keyboardIco: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6.01" y2="10"/><line x1="10" y1="10" x2="10.01" y2="10"/><line x1="14" y1="10" x2="14.01" y2="10"/><line x1="18" y1="10" x2="18.01" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/></svg>,
-  // profile menu
   crown: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><line x1="5" y1="20" x2="19" y2="20"/></svg>,
   plug: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18"/><path d="M7 17l-5 5"/><path d="M17 7l5-5"/><path d="M8 21l-5-5 3-3 5 5-3 3z"/><path d="M16 3l5 5-3 3-5-5 3-3z"/></svg>,
   key: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>,
   logout: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-  // recent icons
   dna: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 2-2.518 3.995-2.807 5.993"/><path d="M2 9c6.667 6 13.333 0 20 6"/></svg>,
   brain: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.544-4.579A3 3 0 0 1 4 11a3 3 0 0 1 1.5-2.5A2.5 2.5 0 0 1 9.5 2"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.544-4.579A3 3 0 0 0 20 11a3 3 0 0 0-1.5-2.5A2.5 2.5 0 0 0 14.5 2"/></svg>,
   virus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/><circle cx="12" cy="2" r="1" fill="currentColor"/><circle cx="12" cy="22" r="1" fill="currentColor"/><circle cx="2" cy="12" r="1" fill="currentColor"/><circle cx="22" cy="12" r="1" fill="currentColor"/></svg>,
@@ -80,7 +70,6 @@ const Ico = ({ k, size = 16, style = {} }) => (
   </span>
 );
 
-// ── Thinking dots ─────────────────────────────────────────────────────────────
 const ThinkingDots = () => (
   <span style={{ display:"inline-flex", gap:4, alignItems:"center" }}>
     {[0,1,2].map(i => (
@@ -89,7 +78,6 @@ const ThinkingDots = () => (
   </span>
 );
 
-// ── Data ──────────────────────────────────────────────────────────────────────
 const INITIAL_MESSAGES = [
   { id:1, role:"user", text:"What are the key breakthroughs in transformer architecture research in 2024?" },
   { id:2, role:"ai",
@@ -130,7 +118,6 @@ const ACTION_TOOLS = [
   { k:"video",      label:"Video Script" },
 ];
 
-// ── Global CSS ────────────────────────────────────────────────────────────────
 const GCSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body,#root{height:100%;background:#0a0a0a;color:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;}
@@ -186,7 +173,6 @@ button{cursor:pointer;}
 .nx-pmitem.danger:hover{color:#e05555;background:rgba(224,85,85,.08);}
 `;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const NexusLogo = ({ size = 28 }) => (
   <div style={{ width:size,height:size,borderRadius:Math.round(size*.27),background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
     <svg width={size*.56} height={size*.56} viewBox="0 0 16 16" fill="#0a0a0a">
@@ -207,7 +193,6 @@ const Toggle = ({ on, onToggle }) => (
   <div className={`nx-toggle${on?" on":""}`} onClick={onToggle} role="switch" aria-checked={on} />
 );
 
-// ── Settings Modal ────────────────────────────────────────────────────────────
 const S_TABS = [
   { id:"general",  k:"adjustments", label:"General" },
   { id:"appear",   k:"palette",     label:"Appearance" },
@@ -259,7 +244,6 @@ function SettingsModal({ onClose }) {
   );
 }
 
-// ── Profile Menu ──────────────────────────────────────────────────────────────
 function ProfileMenu({ onClose, onSettings }) {
   return (
     <div className="nx-pmenu">
@@ -278,7 +262,6 @@ function ProfileMenu({ onClose, onSettings }) {
   );
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
 function Header({ onToggleSources, onOpenSettings, sourcesOn }) {
   const [showProfile, setShowProfile] = useState(false);
   return (
@@ -303,7 +286,6 @@ function Header({ onToggleSources, onOpenSettings, sourcesOn }) {
   );
 }
 
-// ── Left Sidebar ──────────────────────────────────────────────────────────────
 function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }) {
   return (
     <div style={{ width:198,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"12px 10px",flexShrink:0 }}>
@@ -333,13 +315,11 @@ function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }) {
         ))}
       </div>
 
-      {/* Bottom: profile + settings */}
       <div style={{ marginTop:"auto" }}>
         <div style={{ height:1,background:C.border,marginBottom:8 }}/>
         <button className="nx-nav" onClick={onOpenSettings}>
           <Ico k="settings" size={15}/> Settings
         </button>
-        {/* Profile row */}
         <div className="nx-nav" style={{ gap:9 }}>
           <div style={{ width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#c49633)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#0a0a0a",fontWeight:700,flexShrink:0 }}>KR</div>
           <div style={{ flex:1,overflow:"hidden" }}>
@@ -353,7 +333,6 @@ function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }) {
   );
 }
 
-// ── Messages ──────────────────────────────────────────────────────────────────
 const UserBubble = ({ text }) => (
   <div style={{ display:"flex",justifyContent:"flex-end" }} className="nx-fade">
     <div style={{ background:C.surface3,border:`1px solid ${C.border2}`,padding:"10px 14px",borderRadius:"12px 12px 3px 12px",maxWidth:"70%",fontSize:13,lineHeight:1.6,color:C.text }}>{text}</div>
@@ -389,7 +368,6 @@ const ThinkingMsg = ({ query }) => (
   </div>
 );
 
-// ── Input Area ────────────────────────────────────────────────────────────────
 function InputArea({ onSend }) {
   const [val, setVal] = useState("");
   const [deepOn, setDeepOn] = useState(false);
@@ -404,14 +382,12 @@ function InputArea({ onSend }) {
 
   return (
     <div style={{ padding:"0 16px 14px",background:C.surface,borderTop:`1px solid ${C.border}`,flexShrink:0 }}>
-      {/* Compact action tools — tight row above input */}
       <div style={{ display:"flex",gap:5,padding:"8px 0 7px",overflowX:"auto",flexShrink:0 }}>
         {ACTION_TOOLS.map(({k,label})=>(
           <button key={label} className="nx-tool"><Ico k={k} size={12}/>{label}</button>
         ))}
       </div>
 
-      {/* Input box */}
       <div className="nx-inp">
         <button className="nx-meta" title="Attach file" style={{ padding:"3px 4px",marginBottom:1 }}><Ico k="paperclip" size={17}/></button>
         <button className="nx-meta" title="Add image or video" style={{ padding:"3px 4px",marginBottom:1 }}><Ico k="image" size={17}/></button>
@@ -437,7 +413,6 @@ function InputArea({ onSend }) {
         ><Ico k="send" size={13} style={{ color:val.trim()?"#0a0a0a":C.muted }}/></button>
       </div>
 
-      {/* Footer */}
       <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8 }}>
         <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
           <button className={`nx-itag${deepOn?" on":""}`} onClick={()=>setDeepOn(p=>!p)}><Ico k="telescope" size={12}/>Deep Search</button>
@@ -453,7 +428,6 @@ function InputArea({ onSend }) {
   );
 }
 
-// ── Sources Panel ─────────────────────────────────────────────────────────────
 function SourcesPanel({ activeTab, setActiveTab }) {
   return (
     <div style={{ width:278,background:C.surface,borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0,overflow:"hidden" }}>
@@ -506,7 +480,6 @@ function SourcesPanel({ activeTab, setActiveTab }) {
   );
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
 export default function NexusApp() {
   const [messages, setMessages]         = useState(INITIAL_MESSAGES);
   const [thinking, setThinking]         = useState(null);
@@ -526,17 +499,78 @@ export default function NexusApp() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, thinking]);
 
-  const handleSend = text => {
-    setMessages(p=>[...p,{ id:Date.now(),role:"user",text }]);
+  const handleSend = async (text: string) => {
+    const userMessage = { 
+      id: Date.now(), 
+      role: "user" as const, 
+      text: text 
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
     setThinking(text);
-    setTimeout(()=>{
+  
+    try {
+      // Get last 10 messages for context (better memory)
+      const recentMessages = messages.slice(-10);
+  
+      const history = recentMessages
+        .filter(msg => msg.role === "user" || msg.role === "ai")
+        .map(msg => {
+          // Clean content (remove HTML tags if present)
+          let content = "";
+          if (msg.text) {
+            content = msg.text;
+          } else if (msg.html) {
+            content = msg.html.replace(/<[^>]*>/g, ''); // Remove HTML tags
+          }
+          return {
+            role: msg.role === "user" ? "user" : "assistant",
+            content: content
+          };
+        });
+  
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: text,
+          history: history
+        }),
+      });
+  
+      const data = await res.json();
       setThinking(null);
-      setMessages(p=>[...p,{
-        id:Date.now()+1, role:"ai",
-        html:`Great question about <strong>"${text.slice(0,55)}${text.length>55?"…":""}"</strong>.<br/><br/>Based on the latest research, this area has seen rapid progress. Multiple competing frameworks have emerged, with 2024 work pointing toward hybrid approaches combining classical and novel paradigms. <cite>1</cite><br/><br/>The methodological consensus remains active, with three main schools of thought in the literature. Empirical results show statistically significant improvements over prior baselines. <cite>2</cite>`,
-        followups:["Summarize the key papers","Show the timeline","What are the open problems?"],
+  
+      if (data.success) {
+        const aiMessage = {
+          id: Date.now() + 1,
+          role: "ai" as const,
+          html: data.response.replace(/\n/g, '<br/>'),
+          followups: [
+            "Tell me more about this",
+            "What are the key papers?",
+            "Explain with examples"
+          ],
+        };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        setMessages(prev => [...prev, {
+          id: Date.now() + 1,
+          role: "ai" as const,
+          html: "Sorry, something went wrong. Please try again.",
+          followups: [],
+        }]);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setThinking(null);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        role: "ai" as const,
+        html: "Failed to get response. Please check your connection.",
+        followups: [],
       }]);
-    }, 2000);
+    }
   };
 
   return (
@@ -569,4 +603,5 @@ export default function NexusApp() {
       {showSettings&&<SettingsModal onClose={()=>setShowSettings(false)}/>}
     </div>
   );
+
 }
