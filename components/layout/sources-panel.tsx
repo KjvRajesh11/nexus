@@ -51,7 +51,7 @@ export default function SourcesPanel({
   }, [activeCitationId]);
 
   return (
-    <div style={{ 
+    <div className="nx-sources-panel" style={{ 
       width: 278, 
       background: "#111111", 
       borderLeft: "1px solid rgba(255,255,255,0.07)", 
@@ -135,7 +135,7 @@ export default function SourcesPanel({
               Documents ({documents.length})
             </div>
 
-            {documents.length > 0 ? (
+            {documents.length > 0 || isParsing ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {documents.map((doc) => (
                   <div 
@@ -178,6 +178,16 @@ export default function SourcesPanel({
                     </button>
                   </div>
                 ))}
+                {isParsing && (
+                  <div 
+                    className="nx-skeleton"
+                    style={{
+                      height: 38,
+                      borderRadius: 8,
+                      border: "1px solid rgba(255,255,255,0.04)"
+                    }}
+                  />
+                )}
               </div>
             ) : (
               <div style={{ textAlign: "center", padding: "24px 10px", color: "#5a5a5a", fontSize: 11 }}>

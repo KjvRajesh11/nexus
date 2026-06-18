@@ -1,18 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import ExportButton from '@/components/chat/export-button';
+import { Message } from '@/app/page';
 
 interface HeaderProps {
   onToggleSources: () => void;
   onOpenSettings: () => void;
   sourcesOn: boolean;
+  messages?: Message[];
+  activeNav?: string;
 }
 
-export default function Header({ onToggleSources, onOpenSettings, sourcesOn }: HeaderProps) {
+export default function Header({
+  onToggleSources,
+  onOpenSettings,
+  sourcesOn,
+  messages = [],
+  activeNav = 'chat',
+}: HeaderProps) {
   const [showProfile, setShowProfile] = useState(false);
 
   return (
-    <div style={{ 
+    <div className="nx-header" style={{ 
       display: "flex", 
       alignItems: "center", 
       justifyContent: "space-between", 
@@ -44,7 +54,11 @@ export default function Header({ onToggleSources, onOpenSettings, sourcesOn }: H
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {activeNav === 'chat' && messages.length > 0 && (
+          <ExportButton messages={messages} />
+        )}
+
         <button 
           onClick={onToggleSources}
           style={{ 

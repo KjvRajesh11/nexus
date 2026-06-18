@@ -1,3 +1,4 @@
+/* eslint-disable */
 const pdf = require('pdf-parse');
 
 async function test() {

@@ -26,7 +26,7 @@ export default function LeftSidebar({ activeNav, setActiveNav, onOpenSettings, o
   ];
 
   return (
-    <div style={{ 
+    <div className="nx-sidebar" style={{ 
       width: 198, 
       background: "#111111", 
       borderRight: "1px solid rgba(255,255,255,0.07)", 

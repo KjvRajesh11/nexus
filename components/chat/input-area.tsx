@@ -58,7 +58,7 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
   };
 
   return (
-    <div style={{ padding: "0 16px 14px", background: "#111111", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+    <div className="nx-input-area" style={{ padding: "0 16px 14px", background: "#111111", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
       
       {/* Uploaded File Previews */}
       {selectedFile && (

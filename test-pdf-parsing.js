@@ -1,3 +1,4 @@
+/* eslint-disable */
 const fs = require('fs');
 // Polyfill browser globals required by pdf-parse's dependency (pdfjs-dist) in Node.js
 if (typeof global.DOMMatrix === 'undefined') {

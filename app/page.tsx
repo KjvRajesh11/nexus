@@ -98,7 +98,7 @@ type MessageFile = {
   url?: string;
 };
 
-type Message = {
+export type Message = {
   id: number;
   role: "user" | "ai";
   text?: string;
@@ -106,6 +106,7 @@ type Message = {
   followups?: string[];
   file?: MessageFile;
   sources?: Array<{ id: number; text: string; documentName?: string }>;
+  isError?: boolean;
 };
 
 function toMessageFile(file: File): MessageFile {
@@ -216,6 +217,108 @@ button{cursor:pointer;}
 .nx-pmitem{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;font-size:12px;color:#888;cursor:pointer;border:none;background:transparent;width:100%;transition:background .12s,color .12s;}
 .nx-pmitem:hover{background:#222;color:#f0f0f0;}
 .nx-pmitem.danger:hover{color:#e05555;background:rgba(224,85,85,.08);}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 168, 67, 0.3);
+}
+
+/* Micro-interactions & Polish */
+.nx-fu, .nx-meta, .nx-itag, .nx-recent, .nx-hico, .nx-src, .nx-drop {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.nx-fu:hover, .nx-meta:hover, .nx-itag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 168, 67, 0.08);
+}
+.nx-fu:active, .nx-meta:active, .nx-itag:active {
+  transform: translateY(0);
+}
+
+/* Skeleton Loading State */
+@keyframes nxSkeleton {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.nx-skeleton {
+  background: linear-gradient(90deg, #161616 25%, #222 50%, #161616 75%);
+  background-size: 200px 100%;
+  animation: nxSkeleton 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+/* Print Overrides */
+@media print {
+  body, html, #root, .nx-app-container, .nx-main-container, .nx-chat-area {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .nx-header, .nx-sidebar, .nx-sources-panel, .nx-input-area, .nx-meta, .nx-fu, button, svg {
+    display: none !important;
+  }
+  .nx-chat-list {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .nx-user-bubble-container, .nx-ai-bubble-container {
+    page-break-inside: avoid;
+    margin-bottom: 24px !important;
+    display: block !important;
+    background: transparent !important;
+    border: none !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .nx-user-bubble-container > div {
+    background: transparent !important;
+    border: none !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .nx-user-bubble-container::before {
+    content: "You:";
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #000000 !important;
+  }
+  .nx-ai-bubble-container::before {
+    content: "Nexus:";
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #000000 !important;
+  }
+  cite {
+    background: #e8e8e8 !important;
+    border: 1px solid #999999 !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
 `;
 
 const NexusLogo = ({ size = 28 }) => (
@@ -250,7 +353,7 @@ const S_TABS = [
 ];
 
 const UserBubble = ({ text, file }: Pick<Message, "text" | "file">) => (
-  <div style={{ display: "flex", justifyContent: "flex-end" }} className="nx-fade">
+  <div style={{ display: "flex", justifyContent: "flex-end" }} className="nx-fade nx-user-bubble-container">
     <div style={{ background: C.surface3, border: `1px solid ${C.border2}`, padding: "10px 14px", borderRadius: "12px 12px 3px 12px", maxWidth: "70%", fontSize: 13, lineHeight: 1.6, color: C.text }}>
       {file && (
         <div style={{
@@ -293,7 +396,7 @@ const AiBubble = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }} className="nx-fade" onClick={handleBubbleClick}>
+    <div style={{ display: "flex", flexDirection: "column" }} className="nx-fade nx-ai-bubble-container" onClick={handleBubbleClick}>
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <AiAvatar />
         <div style={{ flex: 1 }}>
@@ -313,6 +416,71 @@ const AiBubble = ({
     </div>
   );
 };
+
+const ErrorBubble = ({ errorText, onRetry }: { errorText: string; onRetry: () => void }) => (
+  <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }} className="nx-fade">
+    <div style={{ 
+      width: 26, 
+      height: 26, 
+      borderRadius: "50%", 
+      background: "rgba(224, 85, 85, 0.15)", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      color: "#e05555",
+      flexShrink: 0,
+      marginTop: 3 
+    }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ width: 14, height: 14 }}>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    </div>
+    <div style={{ 
+      flex: 1, 
+      background: "rgba(224, 85, 85, 0.04)", 
+      border: "1px solid rgba(224, 85, 85, 0.18)", 
+      borderRadius: 12, 
+      padding: "12px 14px", 
+      display: "flex", 
+      flexDirection: "column",
+      gap: 10
+    }}>
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#e05555", marginBottom: 3 }}>Query Failed</p>
+        <p style={{ fontSize: 12, lineHeight: 1.5, color: "#d0d0d0" }}>{errorText}</p>
+      </div>
+      <div>
+        <button 
+          onClick={onRetry}
+          style={{
+            background: "rgba(224, 85, 85, 0.12)",
+            border: "1px solid rgba(224, 85, 85, 0.24)",
+            color: "#e05555",
+            fontSize: 11,
+            fontWeight: 500,
+            padding: "4px 10px",
+            borderRadius: 6,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            transition: "all 0.15s ease",
+            outline: "none"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(224, 85, 85, 0.2)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "rgba(224, 85, 85, 0.12)"}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}>
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+          Retry Request
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const ThinkingMsg = ({ query }) => (
   <div style={{ display: "flex", gap: 10, alignItems: "center" }} className="nx-fade">
@@ -406,6 +574,14 @@ export default function NexusApp() {
     setDocuments([]);
   };
 
+  const handleRetry = async () => {
+    const userMsgs = messages.filter((m) => m.role === "user");
+    if (userMsgs.length === 0) return;
+    const lastUserMsg = userMsgs[userMsgs.length - 1];
+    setMessages((prev) => prev.filter((m) => !m.isError));
+    await handleSend(lastUserMsg.text || "");
+  };
+
   const handleSend = async (text: string, file?: File | null) => {
     const trimmed = text.trim();
     if (!trimmed && !file) return;
@@ -476,31 +652,107 @@ export default function NexusApp() {
         }),
       });
 
-      const data = await res.json();
       setThinking(null);
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to get response");
+      if (!res.ok) {
+        let errMsg = "Failed to get response";
+        try {
+          const data = await res.json();
+          errMsg = data.error || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
-      const aiMessage: Message = {
-        id: Date.now() + 1,
-        role: "ai",
-        html: data.response
-          .replace(/\n\n/g, "<br/><br/>")
-          .replace(/\n/g, "<br/>")
-          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\[(?:Source\s*)?(\d+)\]/gi, "<cite>$1</cite>"),
-        followups: [
-          "Tell me more about this",
-          "What are the key papers?",
-          "Explain with examples",
-        ],
-        sources: data.sources,
-      };
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
 
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = "";
+
+      const aiMessageId = Date.now() + 1;
+
+      // Initialize the streaming AI message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: aiMessageId,
+          role: "ai",
+          html: "",
+          followups: [],
+          sources: [],
+        },
+      ]);
+
+      let accumulatedText = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          buffer += decoder.decode(value, { stream: !done });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) continue;
+
+            try {
+              const data = JSON.parse(trimmedLine);
+              if (data.type === "sources") {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === aiMessageId ? { ...m, sources: data.sources } : m
+                  )
+                );
+              } else if (data.type === "token") {
+                accumulatedText += data.token;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === aiMessageId
+                      ? {
+                          ...m,
+                          html: accumulatedText
+                            .replace(/\n\n/g, "<br/><br/>")
+                            .replace(/\n/g, "<br/>")
+                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                            .replace(/\[(?:Source\s*)?(\d+)\]/gi, "<cite>$1</cite>"),
+                        }
+                      : m
+                  )
+                );
+              } else if (data.type === "error") {
+                throw new Error(data.error);
+              }
+            } catch (err: unknown) {
+              if (trimmedLine.includes('"type":"error"')) {
+                throw err;
+              }
+              console.error("Stream parse error:", err);
+            }
+          }
+        }
+      }
+
+      // Add followups once streaming finishes
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMessageId
+            ? {
+                ...m,
+                followups: [
+                  "Tell me more about this",
+                  "What are the key papers?",
+                  "Explain with examples",
+                ],
+              }
+            : m
+        )
+      );
+    } catch (error: unknown) {
       console.error("Chat Error:", error);
       setThinking(null);
 
@@ -509,7 +761,8 @@ export default function NexusApp() {
         {
           id: Date.now() + 1,
           role: "ai",
-          html: "Sorry, something went wrong. Please try again.",
+          isError: true,
+          text: error instanceof Error ? error.message : String(error),
           followups: [],
         },
       ]);
@@ -520,16 +773,16 @@ export default function NexusApp() {
   const currentSources = aiMessagesWithSources.length > 0 ? aiMessagesWithSources[aiMessagesWithSources.length - 1].sources : [];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0, background: C.bg, color: C.text, overflow: "hidden" }}>
-      <Header onToggleSources={() => setShowSources(s => !s)} onOpenSettings={() => setShowSettings(true)} sourcesOn={showSources} />
-      <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
+    <div className="nx-app-container" style={{ display: "flex", flexDirection: "column", height: "100vh", minHeight: 0, background: C.bg, color: C.text, overflow: "hidden" }}>
+      <Header onToggleSources={() => setShowSources(s => !s)} onOpenSettings={() => setShowSettings(true)} sourcesOn={showSources} messages={messages} activeNav={activeNav} />
+      <div className="nx-main-container" style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
         <LeftSidebar activeNav={activeNav} setActiveNav={setActiveNav} onOpenSettings={() => setShowSettings(true)} onNewResearch={handleNewResearch} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+        <div className="nx-chat-area" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
           {/* ==================== CHAT VIEW ==================== */}
           {activeNav === "chat" && (
             <>
-              <div style={{
+              <div className="nx-chat-list" style={{
                 flex: 1,
                 overflowY: "auto",
                 padding: "22px 26px",
@@ -565,10 +818,16 @@ export default function NexusApp() {
                 {messages.map((m) =>
                   m.role === "user" ? (
                     <UserBubble key={m.id} text={m.text} file={m.file} />
+                  ) : m.isError ? (
+                    <ErrorBubble 
+                      key={m.id} 
+                      errorText={m.text || "An unexpected error occurred."} 
+                      onRetry={handleRetry}
+                    />
                   ) : (
                     <AiBubble
                       key={m.id}
-                      html={m.html}
+                      html={m.html || ""}
                       followups={m.followups}
                       onFollowup={handleSend}
                       onCitationClick={(id) => {

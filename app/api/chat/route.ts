@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { chunkText, retrieveRelevantChunks } from '@/lib/rag';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -70,43 +71,46 @@ export async function POST(request: NextRequest) {
       processedDocs.push({ name: doc.name, content: docContent });
     }
 
-    // Split each document's content into paragraphs/sources for citations
-    interface Source {
-      id: number;
+    // ── CHUNKING & RETRIEVAL ──────────────────────────────────────────────────
+    interface RawChunk {
       text: string;
       documentName: string;
+      id: number;
     }
-    const sources: Source[] = [];
-    let sourcesPromptText = '';
-    let sourceId = 1;
-    const MAX_CHARS = 12_000;
-    let currentTotalLength = 0;
+    const allChunks: RawChunk[] = [];
+    let chunkIdCounter = 1;
 
     for (const doc of processedDocs) {
       if (!doc.content.trim() || doc.content.startsWith('[')) {
         continue;
       }
-      const rawParagraphs = doc.content
-        .split(/\n\s*\n/)
-        .map((p) => p.trim())
-        .filter(Boolean);
-
-      for (const para of rawParagraphs) {
-        if (currentTotalLength + para.length > MAX_CHARS) {
-          // If the first paragraph is extremely large, slice it. Otherwise break.
-          if (sources.length === 0) {
-            const sliced = para.slice(0, MAX_CHARS);
-            sources.push({ id: 1, text: sliced, documentName: doc.name });
-            sourcesPromptText += `=== SOURCE [1] (from ${doc.name}) ===\n${sliced}\n\n`;
-          }
-          break;
-        }
-        sources.push({ id: sourceId, text: para, documentName: doc.name });
-        sourcesPromptText += `=== SOURCE [${sourceId}] (from ${doc.name}) ===\n${para}\n\n`;
-        currentTotalLength += para.length;
-        sourceId++;
+      const docChunks = chunkText(doc.content);
+      for (const text of docChunks) {
+        allChunks.push({
+          text,
+          documentName: doc.name,
+          id: chunkIdCounter++
+        });
       }
     }
+
+    const retrieved = retrieveRelevantChunks(message || "", allChunks, 10, 12000);
+
+    interface Source {
+      id: number;
+      text: string;
+      documentName: string;
+    }
+    const sources: Source[] = retrieved.map((item, index) => ({
+      id: index + 1,
+      text: item.text,
+      documentName: item.documentName
+    }));
+
+    let sourcesPromptText = '';
+    sources.forEach(source => {
+      sourcesPromptText += `=== SOURCE [${source.id}] (from ${source.documentName}) ===\n${source.text}\n\n`;
+    });
 
     // ── SYSTEM PROMPT ────────────────────────────────────────────────────────
     const systemPrompt = `You are Nexus, an elite AI research assistant for serious academic and technical work.
@@ -158,20 +162,88 @@ Guidelines:
         messages,
         temperature: 0.6,
         max_tokens: 2048,
+        stream: true, // Enable streaming
       }),
     });
 
     if (!groqRes.ok) {
       const errText = await groqRes.text();
       console.error('[Groq] API error:', errText);
-      return NextResponse.json({ success: false, error: 'AI service error' }, { status: 502 });
+      let errMsg = 'AI service error';
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson.error?.message) {
+          errMsg = errJson.error.message;
+        }
+      } catch (_) {
+        // Fallback to general error text
+      }
+      return NextResponse.json({ success: false, error: errMsg }, { status: groqRes.status });
     }
 
-    const groqData = await groqRes.json();
-    const aiResponse =
-      groqData.choices?.[0]?.message?.content ?? 'Unable to generate a response.';
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
-    return NextResponse.json({ success: true, response: aiResponse, sources });
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // 1. Send sources first
+          const sourcesMsg = JSON.stringify({ type: 'sources', sources }) + '\n';
+          controller.enqueue(encoder.encode(sourcesMsg));
+
+          // 2. Read from Groq stream
+          const reader = groqRes.body?.getReader();
+          if (!reader) {
+            throw new Error('Groq response body is not readable');
+          }
+
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() ?? '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed) continue;
+              if (trimmed === 'data: [DONE]') continue;
+
+              if (trimmed.startsWith('data: ')) {
+                const jsonStr = trimmed.slice(6);
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  const token = parsed.choices?.[0]?.delta?.content;
+                  if (token) {
+                    const tokenMsg = JSON.stringify({ type: 'token', token }) + '\n';
+                    controller.enqueue(encoder.encode(tokenMsg));
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE line:', jsonStr, e);
+                }
+              }
+            }
+          }
+          controller.close();
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : 'Stream error';
+          console.error('[Stream] Error while streaming:', err);
+          const errorMsg = JSON.stringify({ type: 'error', error: errMsg }) + '\n';
+          controller.enqueue(encoder.encode(errorMsg));
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+      },
+    });
   } catch (error: unknown) {
     console.error('[Route] Unhandled error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
