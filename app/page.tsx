@@ -84,7 +84,30 @@ const ThinkingDots = () => (
   </span>
 );
 
-const INITIAL_MESSAGES = [
+type MessageFile = {
+  name: string;
+  type: string;
+  url?: string;
+};
+
+type Message = {
+  id: number;
+  role: "user" | "ai";
+  text?: string;
+  html?: string;
+  followups?: string[];
+  file?: MessageFile;
+};
+
+function toMessageFile(file: File): MessageFile {
+  return {
+    name: file.name,
+    type: file.type,
+    url: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+  };
+}
+
+const INITIAL_MESSAGES: Message[] = [
   { id:1, role:"user", text:"What are the key breakthroughs in transformer architecture research in 2024?" },
   { id:2, role:"ai",
     html:`Several significant advances defined transformer research in 2024. The most notable trend was <strong>mixture-of-experts (MoE) scaling</strong>, with models like Mixtral and DeepSeek demonstrating that sparse activation could match dense models at a fraction of compute. <cite>1</cite><br/><br/>State-space models (SSMs) emerged as a serious architectural alternative, with <strong>Mamba-2</strong> showing competitive performance on long-context tasks while achieving linear time complexity. <cite>2</cite> Researchers also made major strides in extending context windows — models handling 1M+ tokens became practical. <cite>3</cite><br/><br/>On the efficiency front, <strong>FlashAttention-3</strong> reduced attention bottlenecks substantially, and speculative decoding techniques became standard practice in production inference pipelines. <cite>4</cite>`,
@@ -210,9 +233,25 @@ const S_TABS = [
   { id:"account",  k:"user",        label:"Account" },
 ];
 
-const UserBubble = ({ text }) => (
+const UserBubble = ({ text, file }: Pick<Message, "text" | "file">) => (
   <div style={{ display:"flex",justifyContent:"flex-end" }} className="nx-fade">
-    <div style={{ background:C.surface3,border:`1px solid ${C.border2}`,padding:"10px 14px",borderRadius:"12px 12px 3px 12px",maxWidth:"70%",fontSize:13,lineHeight:1.6,color:C.text }}>{text}</div>
+    <div style={{ background:C.surface3,border:`1px solid ${C.border2}`,padding:"10px 14px",borderRadius:"12px 12px 3px 12px",maxWidth:"70%",fontSize:13,lineHeight:1.6,color:C.text }}>
+      {file && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: C.surface2, border: `1px solid ${C.border}`,
+          borderRadius: 8, padding: "8px 10px", marginBottom: text ? 8 : 0,
+        }}>
+          {file.url ? (
+            <img src={file.url} alt={file.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+          ) : (
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{file.type.startsWith("image/") ? "🖼️" : "📄"}</span>
+          )}
+          <span style={{ fontSize: 12, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</span>
+        </div>
+      )}
+      {text}
+    </div>
   </div>
 );
 
@@ -246,8 +285,8 @@ const ThinkingMsg = ({ query }) => (
 );
 
 export default function NexusApp() {
-  const [messages, setMessages]         = useState(INITIAL_MESSAGES);
-  const [thinking, setThinking]         = useState(null);
+  const [messages, setMessages]         = useState<Message[]>(INITIAL_MESSAGES);
+  const [thinking, setThinking]         = useState<string | null>(null);
   const [activeNav, setActiveNav]       = useState("chat");
   const [panelTab, setPanelTab]         = useState("Sources");
   const [showSources, setShowSources]   = useState(true);
@@ -264,53 +303,86 @@ export default function NexusApp() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, thinking]);
 
+  const handleNewResearch = () => {
+    setMessages([]);
+    setThinking(null);
+    setActiveNav("chat");
+  };
+
   const handleSend = async (text: string, file?: File | null) => {
-    if (!text.trim()) return;
-  
-    const userMessage = {
+    const trimmed = text.trim();
+    if (!trimmed && !file) return;
+
+    const messageFile = file ? toMessageFile(file) : undefined;
+
+    const userMessage: Message = {
       id: Date.now(),
-      role: "user" as const,
-      text: text.trim(),
+      role: "user",
+      text: trimmed || undefined,
+      file: messageFile,
     };
-  
+
     setMessages((prev) => [...prev, userMessage]);
-    setThinking(text);
-  
+    setThinking(trimmed || messageFile?.name || "Analyzing attachment");
+
     try {
-      // Get last 10 messages for context
+      let filePayload: { name: string; type: string; base64: string } | null = null;
+      if (file) {
+        filePayload = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64 = result.split(",")[1];
+            resolve({
+              name: file.name,
+              type: file.type,
+              base64,
+            });
+          };
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+
       const recentMessages = messages.slice(-10);
-  
+
       const history = recentMessages
         .filter((msg) => msg.role === "user" || msg.role === "ai")
         .map((msg) => {
           let content = "";
           if (msg.text) content = msg.text;
           else if (msg.html) content = msg.html.replace(/<[^>]*>/g, "");
+          if (msg.file) {
+            content = content
+              ? `${content}\n[Attached: ${msg.file.name}]`
+              : `[Attached: ${msg.file.name}]`;
+          }
           return {
             role: msg.role === "user" ? "user" : "assistant",
             content,
           };
         });
-  
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text.trim(),
+          message: trimmed || (messageFile ? `[Attached file: ${messageFile.name}]` : ""),
           history,
+          file: filePayload,
         }),
       });
-  
+
       const data = await res.json();
       setThinking(null);
-  
+
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to get response");
       }
-  
-      const aiMessage = {
+
+      const aiMessage: Message = {
         id: Date.now() + 1,
-        role: "ai" as const,
+        role: "ai",
         html: data.response
           .replace(/\n\n/g, "<br/><br/>")
           .replace(/\n/g, "<br/>")
@@ -321,17 +393,17 @@ export default function NexusApp() {
           "Explain with examples",
         ],
       };
-  
+
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Chat Error:", error);
       setThinking(null);
-  
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
-          role: "ai" as const,
+          role: "ai",
           html: "Sorry, something went wrong. Please try again.",
           followups: [],
         },
@@ -339,11 +411,12 @@ export default function NexusApp() {
     }
   };
 
+
   return (
     <div style={{ display:"flex",flexDirection:"column",height:"100vh",minHeight:0,background:C.bg,color:C.text,overflow:"hidden" }}>
       <Header onToggleSources={()=>setShowSources(s=>!s)} onOpenSettings={()=>setShowSettings(true)} sourcesOn={showSources}/>
       <div style={{ display:"flex",flex:1,overflow:"hidden",minHeight:0 }}>
-        <LeftSidebar activeNav={activeNav} setActiveNav={setActiveNav} onOpenSettings={()=>setShowSettings(true)}/>
+        <LeftSidebar activeNav={activeNav} setActiveNav={setActiveNav} onOpenSettings={()=>setShowSettings(true)} onNewResearch={handleNewResearch}/>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
   
   {/* ==================== CHAT VIEW ==================== */}
@@ -384,13 +457,13 @@ export default function NexusApp() {
         {/* Messages List */}
         {messages.map((m) =>
           m.role === "user" ? (
-            <UserBubble key={m.id} text={m.text} />
+            <UserBubble key={m.id} text={m.text} file={m.file} />
           ) : (
-            <AiBubble 
-              key={m.id} 
-              html={m.html} 
-              followups={m.followups} 
-              onFollowup={handleSend} 
+            <AiBubble
+              key={m.id}
+              html={m.html}
+              followups={m.followups}
+              onFollowup={handleSend}
             />
           )
         )}

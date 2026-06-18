@@ -61,13 +61,13 @@ export default function InputArea({ onSend }: InputAreaProps) {
           <span style={{ fontSize: 13, color: "#f0f0f0", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {selectedFile.name}
           </span>
-          <button onClick={removeFile} style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}>✕</button>
+          <button type="button" onClick={removeFile} aria-label="Remove file" style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}>✕</button>
         </div>
       )}
 
       <div className="nx-inp">
-        <button className="nx-meta" onClick={triggerFileUpload}>📎</button>
-        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,.pdf,.txt,.doc,.docx" style={{ display: "none" }} />
+        <button type="button" className="nx-meta" onClick={triggerFileUpload} aria-label="Attach file">📎</button>
+        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,.pdf,.txt,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style={{ display: "none" }} />
 
         <button className="nx-meta">🖼️</button>
 

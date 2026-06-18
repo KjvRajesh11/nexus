@@ -4,9 +4,10 @@ interface LeftSidebarProps {
   activeNav: string;
   setActiveNav: (nav: string) => void;
   onOpenSettings: () => void;
+  onNewResearch: () => void;
 }
 
-export default function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }: LeftSidebarProps) {
+export default function LeftSidebar({ activeNav, setActiveNav, onOpenSettings, onNewResearch }: LeftSidebarProps) {
   const NAV_ITEMS = [
     { id: "chat", k: "chat", label: "Chat" },
     { id: "library", k: "library", label: "Library" },
@@ -36,6 +37,8 @@ export default function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }:
     }}>
       {/* New Research Button */}
       <button
+        type="button"
+        onClick={onNewResearch}
         style={{ 
           display: "flex", 
           alignItems: "center", 
@@ -68,7 +71,8 @@ export default function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }:
         
         {NAV_ITEMS.map(({ id, k, label, badge }) => (
           <button 
-            key={id} 
+            key={id}
+            type="button"
             onClick={() => setActiveNav(id)}
             style={{ 
               display: "flex", 
