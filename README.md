@@ -1,36 +1,36 @@
-# Nexus - AI Research Assistant
+# Nexus — AI Research Assistant
 
-Nexus is an AI-powered research assistant built to help students, researchers, and knowledge workers with deep, grounded research. It combines a premium interface with real AI capabilities for meaningful conversations around academic and technical topics.
+Nexus is an **AI-native research platform** designed to help students, researchers, and technical founders do deep, reliable research. It combines a premium interface with powerful AI capabilities for meaningful, context-aware conversations.
 
-## 🚀 Current Features
+## 🎯 Vision
+Build the foundational layer for how serious research will be done in the AI era — similar to how Google built search infrastructure.
 
-- Clean, modern research-focused UI (inspired by Grok + Perplexity)
-- Real-time AI responses using Groq (Llama 3.3 70B)
+## ✨ Current Features
+
+- Premium research-focused UI (Grok + Perplexity inspired)
+- Real-time AI responses powered by Groq (Llama 3.3 70B)
 - Conversation memory (remembers last 10 messages)
 - Sources & Insights panel
-- Action tools (Audio Overview, Study Guide, Timeline, etc.)
-- Fully functional chat with follow-up suggestions
+- Action tools (Audio Overview, Study Guide, Timeline, Video Script)
+- Follow-up question suggestions
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
-- **AI**: Groq API (Llama 3.3 70B)
-- **Styling**: Custom premium dark theme
+- **Framework**: Next.js 15 (App Router) + TypeScript
+- **Styling**: Tailwind CSS + Custom premium dark theme
+- **AI**: Groq API
+- **Future**: RAG, Multi-agent systems, Knowledge Graph
 
-## 📦 How to Run Locally
+## 🚀 Getting Started
 
 ```bash
-# Clone the repository
 git clone https://github.com/KjvRajesh11/nexus.git
 cd nexus
-
-# Install dependencies
 npm install
 
 # Add your Groq API key in .env.local
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=your_key_here
 
-# Run the development server
 npm run dev
 
 👨‍💻 Author
