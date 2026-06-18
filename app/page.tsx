@@ -1,6 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react";
+import Header from '@/components/layout/header';
+import LeftSidebar from '@/components/layout/sidebar';
+import SourcesPanel from '@/components/layout/sources-panel';
+import SettingsModal from '@/components/settings/settings-modal';
+import InputArea from '@/components/chat/input-area';
+import ProfileMenu from '@/components/layout/profile-menu';
 
 const C = {
   bg:"#0a0a0a", surface:"#111111", surface2:"#161616", surface3:"#1c1c1c", surface4:"#222222",
@@ -204,135 +210,6 @@ const S_TABS = [
   { id:"account",  k:"user",        label:"Account" },
 ];
 
-function SettingsModal({ onClose }) {
-  const [tab, setTab] = useState("general");
-  const [t, setT] = useState({ deepSearch:true, webSearch:true, citations:true, autoSave:false, notifs:false, motion:false, compact:false, dark:true });
-  const tog = k => setT(p => ({...p,[k]:!p[k]}));
-  const Row = ({ label, desc, k }: { label: string; desc?: string; k: string }) => (
-    <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${C.border}` }}>
-      <div><div style={{ fontSize:13,color:C.text }}>{label}</div>{desc&&<div style={{ fontSize:11,color:C.muted2,marginTop:2 }}>{desc}</div>}</div>
-      <Toggle on={t[k]} onToggle={() => tog(k)} />
-    </div>
-  );
-  return (
-    <div className="nx-overlay" onClick={e => e.target===e.currentTarget&&onClose()}>
-      <div className="nx-modal">
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"15px 20px",borderBottom:`1px solid ${C.border}`,flexShrink:0 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-            <Ico k="settings" size={15} style={{ color:C.accent }}/>
-            <span style={{ fontSize:14,fontWeight:500 }}>Settings</span>
-          </div>
-          <button className="nx-hico" onClick={onClose}><Ico k="x" size={14}/></button>
-        </div>
-        <div style={{ display:"flex",flex:1,overflow:"hidden",minHeight:0 }}>
-          <div style={{ width:168,borderRight:`1px solid ${C.border}`,padding:"10px 8px",flexShrink:0,overflowY:"auto" }}>
-            {S_TABS.map(st => (
-              <button key={st.id} className={`nx-stab${tab===st.id?" active":""}`} onClick={()=>setTab(st.id)}>
-                <Ico k={st.k} size={14}/>{st.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ flex:1,overflowY:"auto",padding:"16px 20px" }}>
-            {tab==="general"&&<><div style={{ fontSize:11,color:C.muted2,marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" }}>General</div><Row label="Deep Research mode" desc="Multi-step web search pipeline" k="deepSearch"/><Row label="Web search" desc="Allow real-time lookups" k="webSearch"/><Row label="Auto-cite sources" desc="Inline citation tags on responses" k="citations"/><Row label="Auto-save sessions" desc="Persist chats to library" k="autoSave"/><Row label="Compact messages" desc="Reduce line spacing in chat" k="compact"/></>}
-            {tab==="appear"&&<><div style={{ fontSize:11,color:C.muted2,marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" }}>Appearance</div><Row label="Dark mode" k="dark"/><Row label="Reduced motion" desc="Disable animations" k="motion"/><div style={{ marginTop:16 }}><div style={{ fontSize:12,color:C.muted2,marginBottom:8 }}>Accent color</div><div style={{ display:"flex",gap:8 }}>{["#d4a843","#4a9eff","#3ecf8e","#e05555","#b06aff"].map(col=><div key={col} style={{ width:24,height:24,borderRadius:"50%",background:col,cursor:"pointer",border:`2px solid ${col==="#d4a843"?"#fff":"transparent"}` }}/>)}</div></div></>}
-            {tab==="models"&&<><div style={{ fontSize:11,color:C.muted2,marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" }}>Models</div>{[["Nexus Pro","Best quality, slower"],["Nexus Fast","Balanced speed & quality"],["Nexus Lite","Fastest, lightweight"]].map(([n,d],i)=><div key={i} style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",borderRadius:8,border:`1px solid ${i===0?C.accentMid:C.border}`,background:i===0?C.accentDim:"transparent",marginBottom:7,cursor:"pointer" }}><div><div style={{ fontSize:13,color:C.text }}>{n}</div><div style={{ fontSize:11,color:C.muted2 }}>{d}</div></div>{i===0&&<span style={{ fontSize:10,color:C.accent,background:C.accentDim,padding:"2px 7px",borderRadius:10,fontWeight:600 }}>Active</span>}</div>)}</>}
-            {(tab==="search"||tab==="privacy"||tab==="notifs"||tab==="keys"||tab==="account")&&<div style={{ color:C.muted2,fontSize:13,marginTop:12 }}>This section is coming in the next update.</div>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProfileMenu({ onClose, onSettings }) {
-  return (
-    <div className="nx-pmenu">
-      <div style={{ padding:"8px 10px 8px",borderBottom:`1px solid ${C.border}`,marginBottom:4 }}>
-        <div style={{ fontSize:13,fontWeight:500 }}>Kjv Rajesh</div>
-        <div style={{ fontSize:11,color:C.muted2 }}>rajeshwind123@gmail.com</div>
-      </div>
-      {[{k:"user",l:"Your profile"},{k:"crown",l:"Upgrade to Pro"},{k:"plug",l:"Integrations"},{k:"key",l:"API access"}].map(({k,l})=>(
-        <button key={l} className="nx-pmitem" onClick={onClose}><Ico k={k} size={14}/>{l}</button>
-      ))}
-      <div style={{ borderTop:`1px solid ${C.border}`,marginTop:4,paddingTop:4 }}>
-        <button className="nx-pmitem" onClick={()=>{onClose();onSettings();}}><Ico k="settings" size={14}/>Settings</button>
-        <button className="nx-pmitem danger" onClick={onClose}><Ico k="logout" size={14}/>Sign out</button>
-      </div>
-    </div>
-  );
-}
-
-function Header({ onToggleSources, onOpenSettings, sourcesOn }) {
-  const [showProfile, setShowProfile] = useState(false);
-  return (
-    <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 18px",background:C.surface,borderBottom:`1px solid ${C.border}`,flexShrink:0,position:"relative",zIndex:10 }}>
-      <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-        <NexusLogo/>
-        <div>
-          <div style={{ fontSize:14,fontWeight:600,letterSpacing:"0.02em" }}>Nexus</div>
-          <div style={{ fontSize:9,color:C.muted,letterSpacing:"0.09em",textTransform:"uppercase",marginTop:1 }}>Research Assistant</div>
-        </div>
-      </div>
-      <div style={{ display:"flex",alignItems:"center",gap:5 }}>
-        <button className={`nx-hico${sourcesOn?" on":""}`} title="Sources panel" onClick={onToggleSources}><Ico k="sidebarRight" size={15}/></button>
-        <button className="nx-hico" title="Keyboard shortcuts"><Ico k="keyboard" size={15}/></button>
-        <button className="nx-hico" title="Settings" onClick={onOpenSettings}><Ico k="settings" size={15}/></button>
-        <div style={{ position:"relative" }}>
-          <div onClick={()=>setShowProfile(p=>!p)} style={{ width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#c49633)`,border:`2px solid rgba(255,255,255,.12)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#0a0a0a",fontWeight:700,cursor:"pointer",flexShrink:0,userSelect:"none" }}>KR</div>
-          {showProfile&&<ProfileMenu onClose={()=>setShowProfile(false)} onSettings={onOpenSettings}/>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LeftSidebar({ activeNav, setActiveNav, onOpenSettings }) {
-  return (
-    <div style={{ width:198,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"12px 10px",flexShrink:0 }}>
-      <button
-        style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:C.surface3,border:`1px solid ${C.border2}`,color:C.text,fontSize:12,cursor:"pointer",marginBottom:16,transition:"background .15s" }}
-        onMouseEnter={e=>e.currentTarget.style.background=C.surface4}
-        onMouseLeave={e=>e.currentTarget.style.background=C.surface3}
-      >
-        <Ico k="plus" size={14}/> New Research
-      </button>
-
-      <div style={{ marginBottom:14 }}>
-        <div style={{ fontSize:9,color:C.muted,letterSpacing:"0.1em",textTransform:"uppercase",padding:"0 6px",marginBottom:5 }}>Workspace</div>
-        {NAV_ITEMS.map(({id,k,label,badge})=>(
-          <button key={id} className={`nx-nav${activeNav===id?" active":""}`} onClick={()=>setActiveNav(id)}>
-            <Ico k={k} size={15}/>
-            <span style={{ flex:1 }}>{label}</span>
-            {badge&&<span style={{ background:C.accent,color:"#0a0a0a",fontSize:9,padding:"1px 5px",borderRadius:10,fontWeight:700 }}>{badge}</span>}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ marginBottom:14 }}>
-        <div style={{ fontSize:9,color:C.muted,letterSpacing:"0.1em",textTransform:"uppercase",padding:"0 6px",marginBottom:5 }}>Recent</div>
-        {RECENTS.map(({k,label},i)=>(
-          <button key={i} className="nx-recent"><Ico k={k} size={13} style={{ color:C.muted2 }}/>{label}</button>
-        ))}
-      </div>
-
-      <div style={{ marginTop:"auto" }}>
-        <div style={{ height:1,background:C.border,marginBottom:8 }}/>
-        <button className="nx-nav" onClick={onOpenSettings}>
-          <Ico k="settings" size={15}/> Settings
-        </button>
-        <div className="nx-nav" style={{ gap:9 }}>
-          <div style={{ width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${C.accent},#c49633)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#0a0a0a",fontWeight:700,flexShrink:0 }}>KR</div>
-          <div style={{ flex:1,overflow:"hidden" }}>
-            <div style={{ fontSize:11,color:C.text,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>Kjv Rajesh</div>
-            <div style={{ fontSize:10,color:C.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>Pro</div>
-          </div>
-          <Ico k="chevronDown" size={12} style={{ color:C.muted }}/>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const UserBubble = ({ text }) => (
   <div style={{ display:"flex",justifyContent:"flex-end" }} className="nx-fade">
     <div style={{ background:C.surface3,border:`1px solid ${C.border2}`,padding:"10px 14px",borderRadius:"12px 12px 3px 12px",maxWidth:"70%",fontSize:13,lineHeight:1.6,color:C.text }}>{text}</div>
@@ -368,118 +245,6 @@ const ThinkingMsg = ({ query }) => (
   </div>
 );
 
-function InputArea({ onSend }) {
-  const [val, setVal] = useState("");
-  const [deepOn, setDeepOn] = useState(false);
-  const [micOn, setMicOn] = useState(false);
-  const taRef = useRef(null);
-  const submit = () => {
-    const t = val.trim(); if(!t) return;
-    onSend(t); setVal("");
-    if(taRef.current) taRef.current.style.height="22px";
-  };
-  const resize = e => { e.target.style.height="22px"; e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"; };
-
-  return (
-    <div style={{ padding:"0 16px 14px",background:C.surface,borderTop:`1px solid ${C.border}`,flexShrink:0 }}>
-      <div style={{ display:"flex",gap:5,padding:"8px 0 7px",overflowX:"auto",flexShrink:0 }}>
-        {ACTION_TOOLS.map(({k,label})=>(
-          <button key={label} className="nx-tool"><Ico k={k} size={12}/>{label}</button>
-        ))}
-      </div>
-
-      <div className="nx-inp">
-        <button className="nx-meta" title="Attach file" style={{ padding:"3px 4px",marginBottom:1 }}><Ico k="paperclip" size={17}/></button>
-        <button className="nx-meta" title="Add image or video" style={{ padding:"3px 4px",marginBottom:1 }}><Ico k="image" size={17}/></button>
-        <textarea
-          ref={taRef}
-          style={{ flex:1,background:"transparent",border:"none",color:C.text,fontSize:13,outline:"none",resize:"none",lineHeight:1.55,minHeight:22,maxHeight:120 }}
-          placeholder="Ask a research question…"
-          value={val}
-          onChange={e=>{ setVal(e.target.value); resize(e); }}
-          onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();}}}
-          rows={1}
-        />
-        <button
-          className="nx-meta"
-          title="Voice input"
-          onClick={()=>setMicOn(p=>!p)}
-          style={{ padding:"3px 4px",marginBottom:1,color:micOn?C.accent:undefined }}
-        ><Ico k="mic" size={17} style={{ color:micOn?C.accent:undefined }}/></button>
-        <button
-          onClick={submit}
-          title="Send"
-          style={{ width:30,height:30,borderRadius:8,background:val.trim()?C.accent:"#1c1c1c",border:"none",display:"flex",alignItems:"center",justifyContent:"center",padding:0,flexShrink:0,marginBottom:1,transition:"background .15s" }}
-        ><Ico k="send" size={13} style={{ color:val.trim()?"#0a0a0a":C.muted }}/></button>
-      </div>
-
-      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8 }}>
-        <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-          <button className={`nx-itag${deepOn?" on":""}`} onClick={()=>setDeepOn(p=>!p)}><Ico k="telescope" size={12}/>Deep Search</button>
-          <button className="nx-itag"><Ico k="doc" size={12}/>Docs</button>
-          <button className="nx-itag"><Ico k="atom" size={12}/>Academic</button>
-          <button className="nx-itag"><Ico k="code" size={12}/>Code</button>
-        </div>
-        <button style={{ background:"transparent",border:"none",fontSize:11,color:C.muted2,display:"flex",alignItems:"center",gap:4,cursor:"pointer" }}>
-          <Ico k="cpu" size={12}/>Nexus Pro<Ico k="chevronDown" size={11}/>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function SourcesPanel({ activeTab, setActiveTab }) {
-  return (
-    <div style={{ width:278,background:C.surface,borderLeft:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0,overflow:"hidden" }}>
-      <div style={{ padding:"12px 14px 9px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0 }}>
-        <div style={{ display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:500 }}>
-          <Ico k="books" size={14} style={{ color:C.accent }}/>Sources & Insights
-        </div>
-        <div style={{ display:"flex",gap:2 }}>
-          {["Sources","Notes"].map(t=>(
-            <button key={t} className={`nx-ptab${activeTab===t?" active":""}`} onClick={()=>setActiveTab(t)}>{t}</button>
-          ))}
-        </div>
-      </div>
-      <div style={{ flex:1,overflowY:"auto",padding:"11px" }}>
-        <div className="nx-drop">
-          <div style={{ display:"flex",justifyContent:"center",marginBottom:5 }}><Ico k="upload" size={22} style={{ color:C.muted2 }}/></div>
-          <p style={{ fontSize:11,color:C.muted2,lineHeight:1.5 }}>Drop PDFs, papers or links<br/><span style={{ color:C.accent }}>or click to upload</span></p>
-        </div>
-        <div style={{ fontSize:9,color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",padding:"7px 0 5px",borderTop:`1px solid ${C.border}`,marginTop:2 }}>Referenced · {SOURCES.length} sources</div>
-        {SOURCES.map(s=>(
-          <div key={s.id} className="nx-src">
-            <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:5 }}>
-              <span style={{ fontSize:10,color:C.accent,fontWeight:600,background:C.accentDim,padding:"1px 6px",borderRadius:4 }}>{s.num}</span>
-              <span style={{ fontSize:10,color:C.muted,display:"flex",alignItems:"center",gap:3 }}><Ico k={s.icoKey} size={10}/>{s.type}</span>
-            </div>
-            <div style={{ fontSize:11.5,color:C.text,fontWeight:500,marginBottom:3,lineHeight:1.4 }}>{s.title}</div>
-            <div style={{ fontSize:10,color:C.muted }}>{s.meta}</div>
-            <div style={{ fontSize:11,color:C.muted2,marginTop:6,lineHeight:1.5,borderTop:`1px solid ${C.border}`,paddingTop:6 }}>{s.excerpt}</div>
-          </div>
-        ))}
-        <div style={{ fontSize:9,color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",padding:"7px 0 5px",borderTop:`1px solid ${C.border}`,marginTop:4 }}>Key Insights</div>
-        {[
-          { k:"bulb",label:"Key Takeaways",items:["MoE achieves 3–4× compute savings vs dense equivalents","SSMs solve quadratic scaling for long inputs","Context windows grew 10× from 2023 to 2024"] },
-          { k:"trending",label:"Research Trend",items:["Hybrid attention+SSM architectures gaining traction","Speculative decoding in ~80% of prod systems"] },
-        ].map(({ k, label, items })=>(
-          <div key={label} style={{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:9,padding:"9px 10px",marginBottom:7 }}>
-            <div style={{ fontSize:10,color:C.accent,fontWeight:600,letterSpacing:"0.05em",textTransform:"uppercase",marginBottom:7,display:"flex",alignItems:"center",gap:4 }}>
-              <Ico k={k} size={12}/>{label}
-            </div>
-            {items.map((ins,i)=>(
-              <div key={i} style={{ display:"flex",alignItems:"flex-start",gap:7,fontSize:11,color:C.muted2,marginBottom:i<items.length-1?5:0,lineHeight:1.4 }}>
-                <span style={{ width:4,height:4,borderRadius:"50%",background:C.accent,flexShrink:0,marginTop:5 }}/>
-                {ins}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function NexusApp() {
   const [messages, setMessages]         = useState(INITIAL_MESSAGES);
   const [thinking, setThinking]         = useState(null);
@@ -499,77 +264,78 @@ export default function NexusApp() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, thinking]);
 
-  const handleSend = async (text: string) => {
-    const userMessage = { 
-      id: Date.now(), 
-      role: "user" as const, 
-      text: text 
+  const handleSend = async (text: string, file?: File | null) => {
+    if (!text.trim()) return;
+  
+    const userMessage = {
+      id: Date.now(),
+      role: "user" as const,
+      text: text.trim(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
+  
+    setMessages((prev) => [...prev, userMessage]);
     setThinking(text);
   
     try {
-      // Get last 10 messages for context (better memory)
+      // Get last 10 messages for context
       const recentMessages = messages.slice(-10);
   
       const history = recentMessages
-        .filter(msg => msg.role === "user" || msg.role === "ai")
-        .map(msg => {
-          // Clean content (remove HTML tags if present)
+        .filter((msg) => msg.role === "user" || msg.role === "ai")
+        .map((msg) => {
           let content = "";
-          if (msg.text) {
-            content = msg.text;
-          } else if (msg.html) {
-            content = msg.html.replace(/<[^>]*>/g, ''); // Remove HTML tags
-          }
+          if (msg.text) content = msg.text;
+          else if (msg.html) content = msg.html.replace(/<[^>]*>/g, "");
           return {
             role: msg.role === "user" ? "user" : "assistant",
-            content: content
+            content,
           };
         });
   
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: text,
-          history: history
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text.trim(),
+          history,
         }),
       });
   
       const data = await res.json();
       setThinking(null);
   
-      if (data.success) {
-        const aiMessage = {
-          id: Date.now() + 1,
-          role: "ai" as const,
-          html: data.response.replace(/\n/g, '<br/>'),
-          followups: [
-            "Tell me more about this",
-            "What are the key papers?",
-            "Explain with examples"
-          ],
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      } else {
-        setMessages(prev => [...prev, {
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to get response");
+      }
+  
+      const aiMessage = {
+        id: Date.now() + 1,
+        role: "ai" as const,
+        html: data.response
+          .replace(/\n\n/g, "<br/><br/>")
+          .replace(/\n/g, "<br/>")
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"),
+        followups: [
+          "Tell me more about this",
+          "What are the key papers?",
+          "Explain with examples",
+        ],
+      };
+  
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Chat Error:", error);
+      setThinking(null);
+  
+      setMessages((prev) => [
+        ...prev,
+        {
           id: Date.now() + 1,
           role: "ai" as const,
           html: "Sorry, something went wrong. Please try again.",
           followups: [],
-        }]);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setThinking(null);
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: "ai" as const,
-        html: "Failed to get response. Please check your connection.",
-        followups: [],
-      }]);
+        },
+      ]);
     }
   };
 
@@ -578,26 +344,106 @@ export default function NexusApp() {
       <Header onToggleSources={()=>setShowSources(s=>!s)} onOpenSettings={()=>setShowSettings(true)} sourcesOn={showSources}/>
       <div style={{ display:"flex",flex:1,overflow:"hidden",minHeight:0 }}>
         <LeftSidebar activeNav={activeNav} setActiveNav={setActiveNav} onOpenSettings={()=>setShowSettings(true)}/>
-        <div style={{ flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minWidth:0 }}>
-          <div style={{ flex:1,overflowY:"auto",padding:"22px 26px",display:"flex",flexDirection:"column",gap:20 }}>
-            {messages.length<=2&&(
-              <div style={{ background:C.surface2,border:`1px solid ${C.border}`,borderRadius:12,padding:"13px 16px",display:"flex",alignItems:"flex-start",gap:12 }} className="nx-fade">
-                <NexusLogo size={30}/>
-                <div>
-                  <div style={{ fontSize:13,fontWeight:500,marginBottom:3 }}>Welcome to Nexus</div>
-                  <div style={{ fontSize:12,color:C.muted2,lineHeight:1.55 }}>Your AI-powered research assistant. Ask anything, upload papers, or start a deep dive.</div>
-                </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+  
+  {/* ==================== CHAT VIEW ==================== */}
+  {activeNav === "chat" && (
+    <>
+      <div style={{ 
+        flex: 1, 
+        overflowY: "auto", 
+        padding: "22px 26px", 
+        display: "flex", 
+        flexDirection: "column", 
+        gap: 20 
+      }}>
+        
+        {/* Welcome Message */}
+        {messages.length <= 2 && (
+          <div style={{ 
+            background: C.surface2, 
+            border: `1px solid ${C.border}`, 
+            borderRadius: 12, 
+            padding: "13px 16px", 
+            display: "flex", 
+            alignItems: "flex-start", 
+            gap: 12 
+          }} className="nx-fade">
+            <NexusLogo size={30} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 3 }}>
+                Welcome to Nexus
               </div>
-            )}
-            {messages.map(m => m.role==="user"
-              ? <UserBubble key={m.id} text={m.text}/>
-              : <AiBubble key={m.id} html={m.html} followups={m.followups} onFollowup={handleSend}/>
-            )}
-            {thinking&&<ThinkingMsg query={thinking}/>}
-            <div ref={bottomRef}/>
+              <div style={{ fontSize: 12, color: C.muted2, lineHeight: 1.55 }}>
+                Your AI-powered research assistant. Ask anything, upload papers, or start a deep dive.
+              </div>
+            </div>
           </div>
-          <InputArea onSend={handleSend}/>
-        </div>
+        )}
+
+        {/* Messages List */}
+        {messages.map((m) =>
+          m.role === "user" ? (
+            <UserBubble key={m.id} text={m.text} />
+          ) : (
+            <AiBubble 
+              key={m.id} 
+              html={m.html} 
+              followups={m.followups} 
+              onFollowup={handleSend} 
+            />
+          )
+        )}
+
+        {/* Thinking Indicator */}
+        {thinking && <ThinkingMsg query={thinking} />}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input Box */}
+      <InputArea onSend={handleSend} />
+    </>
+  )}
+
+  {/* ==================== OTHER SECTIONS ==================== */}
+  {activeNav === "spaces" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      Spaces Section (Coming soon...)
+    </div>
+  )}
+
+  {activeNav === "library" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      Library Section (Coming soon...)
+    </div>
+  )}
+
+  {activeNav === "projects" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      Projects Section (Coming soon...)
+    </div>
+  )}
+
+  {activeNav === "history" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      History Section (Coming soon...)
+    </div>
+  )}
+
+  {activeNav === "bookmarks" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      Bookmarks Section (Coming soon...)
+    </div>
+  )}
+
+  {activeNav === "discover" && (
+    <div style={{ padding: "40px", color: "#888", fontSize: 18 }}>
+      Discover Section (Coming soon...)
+    </div>
+  )}
+
+</div>
         {showSources&&<SourcesPanel activeTab={panelTab} setActiveTab={setPanelTab}/>}
       </div>
       {showSettings&&<SettingsModal onClose={()=>setShowSettings(false)}/>}
