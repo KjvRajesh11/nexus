@@ -4,9 +4,12 @@ import { useState, useRef } from 'react';
 
 interface InputAreaProps {
   onSend: (text: string, file?: File | null) => void;
+  onAttachFiles?: (files: FileList | File[]) => void;
+  documentsCount?: number;
+  isParsing?: boolean;
 }
 
-export default function InputArea({ onSend }: InputAreaProps) {
+export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, isParsing = false }: InputAreaProps) {
   const [val, setVal] = useState("");
   const [deepOn, setDeepOn] = useState(false);
   const [micOn, setMicOn] = useState(false);
@@ -16,7 +19,7 @@ export default function InputArea({ onSend }: InputAreaProps) {
 
   const submit = () => {
     const text = val.trim();
-    if (!text && !selectedFile) return;
+    if (!text && !selectedFile && documentsCount === 0) return;
 
     // Send both text + file (if any)
     onSend(text, selectedFile);
@@ -29,8 +32,15 @@ export default function InputArea({ onSend }: InputAreaProps) {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setSelectedFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      if (onAttachFiles) {
+        onAttachFiles(files);
+      } else {
+        const file = files[0];
+        setSelectedFile(file);
+      }
+    }
   };
 
   const triggerFileUpload = () => {
@@ -50,7 +60,7 @@ export default function InputArea({ onSend }: InputAreaProps) {
   return (
     <div style={{ padding: "0 16px 14px", background: "#111111", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
       
-      {/* Uploaded File Preview */}
+      {/* Uploaded File Previews */}
       {selectedFile && (
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 8,
@@ -65,9 +75,34 @@ export default function InputArea({ onSend }: InputAreaProps) {
         </div>
       )}
 
+      {(documentsCount > 0 || isParsing) && (
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 20, padding: "6px 14px", marginBottom: 8
+        }}>
+          <span>📚</span>
+          <span style={{ fontSize: 12, color: "#f0f0f0" }}>
+            {documentsCount} active document{documentsCount === 1 ? "" : "s"}
+          </span>
+          {isParsing && (
+            <span style={{ fontSize: 11, color: "#d4a843", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              · Parsing new file...
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="nx-inp">
         <button type="button" className="nx-meta" onClick={triggerFileUpload} aria-label="Attach file">📎</button>
-        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,.pdf,.txt,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style={{ display: "none" }} />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileSelect} 
+          multiple
+          accept=".pdf,.txt,text/plain,application/pdf"
+          style={{ display: "none" }} 
+        />
 
         <button className="nx-meta">🖼️</button>
 
@@ -85,7 +120,7 @@ export default function InputArea({ onSend }: InputAreaProps) {
 
         <button onClick={submit} style={{
           width: 30, height: 30, borderRadius: 8,
-          background: (val.trim() || selectedFile) ? "#d4a843" : "#1c1c1c",
+          background: (val.trim() || selectedFile || documentsCount > 0) ? "#d4a843" : "#1c1c1c",
           border: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0, marginBottom: 1, cursor: "pointer"
         }}>
           ➤
