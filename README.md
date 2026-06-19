@@ -54,7 +54,7 @@ Open http://localhost:3000
 ```
 
 ### Project Structure
-textnexus/
+nexus/
 ├── app/
 │   ├── api/              # API routes
 │   ├── layout.tsx
@@ -65,7 +65,6 @@ textnexus/
 ├── lib/
 │   └── rag/              # RAG engine (chunker, embeddings, vector store, etc.)
 └── public/
-Current Status
 
 ### Core RAG pipeline is functional
 Multi-document support with citations
