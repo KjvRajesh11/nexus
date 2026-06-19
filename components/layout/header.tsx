@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import ExportButton from '@/components/chat/export-button';
 import { Message } from '@/app/page';
 
@@ -19,111 +18,143 @@ export default function Header({
   messages = [],
   activeNav = 'chat',
 }: HeaderProps) {
-  const [showProfile, setShowProfile] = useState(false);
-
   return (
     <div className="nx-header" style={{ 
       display: "flex", 
       alignItems: "center", 
       justifyContent: "space-between", 
       padding: "10px 18px", 
-      background: "#111111", 
-      borderBottom: "1px solid rgba(255,255,255,0.07)", 
+      background: "#000000", 
+      borderBottom: "1px solid rgba(255,255,255,0.08)", 
       flexShrink: 0, 
-      position: "relative", 
+      height: 48,
+      fontFamily: "var(--font-space-grotesk)",
       zIndex: 10 
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      
+      {/* Model Selection Dropdown (Left side) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 11.5, color: "#52525b", fontWeight: 500 }}>Model:</span>
         <div style={{ 
-          width: 28, 
-          height: 28, 
-          borderRadius: 8, 
-          background: "#d4a843", 
           display: "flex", 
           alignItems: "center", 
-          justifyContent: "center", 
-          flexShrink: 0 
+          gap: 6,
+          background: "#09090b",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 4,
+          padding: "4px 8px",
+          fontSize: 11.5,
+          color: "#ffffff",
+          cursor: "pointer",
+          userSelect: "none"
         }}>
-          <span style={{ color: "#0a0a0a", fontWeight: 700, fontSize: 16 }}>N</span>
-        </div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.02em" }}>Nexus</div>
-          <div style={{ fontSize: 9, color: "#5a5a5a", letterSpacing: "0.09em", textTransform: "uppercase", marginTop: 1 }}>
-            Research Assistant
-          </div>
+          <span>Nexus-Pro-v4</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {activeNav === 'chat' && messages.length > 0 && (
-          <ExportButton messages={messages} />
-        )}
+      {/* Centered Search Workspace Input */}
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", maxWidth: "40%", margin: "0 20px" }}>
+        <div style={{ 
+          position: "relative",
+          width: "100%",
+          maxWidth: 320
+        }}>
+          <span style={{ 
+            position: "absolute",
+            left: 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#52525b",
+            display: "flex"
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            placeholder="Search workspace..."
+            style={{
+              width: "100%",
+              background: "#09090b",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 4,
+              padding: "5px 10px 5px 28px",
+              fontSize: 12,
+              color: "#ffffff",
+              outline: "none",
+              fontFamily: "var(--font-geist-sans)"
+            }}
+          />
+        </div>
+      </div>
 
+      {/* Action Buttons (Right side) */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        
+        {/* Toggle Sources Sidebar */}
         <button 
           onClick={onToggleSources}
           style={{ 
-            width: 30, 
-            height: 30, 
-            borderRadius: 8, 
+            width: 28, 
+            height: 28, 
+            borderRadius: 4, 
             border: "1px solid rgba(255,255,255,0.08)", 
-            background: sourcesOn ? "rgba(212,168,67,0.08)" : "transparent",
-            color: sourcesOn ? "#d4a843" : "#666",
+            background: sourcesOn ? "rgba(255,255,255,0.05)" : "transparent",
+            color: sourcesOn ? "#ffffff" : "#71717a",
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center",
-            cursor: "pointer"
+            cursor: "pointer",
+            transition: "all 0.15s"
           }}
-          title="Sources panel"
+          title="Toggle sources side panel"
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
             <line x1="15" y1="3" x2="15" y2="21"/>
           </svg>
         </button>
 
+        {/* Export Options (Active in chat route) */}
+        {activeNav === 'chat' && messages.length > 0 && (
+          <ExportButton messages={messages} />
+        )}
+
+        {/* Share Workspace Button */}
         <button 
-          onClick={onOpenSettings}
           style={{ 
-            width: 30, 
-            height: 30, 
-            borderRadius: 8, 
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            height: 28, 
+            borderRadius: 4, 
             border: "1px solid rgba(255,255,255,0.08)", 
             background: "transparent",
-            color: "#666",
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            cursor: "pointer"
+            color: "#ffffff",
+            padding: "0 10px",
+            cursor: "pointer",
+            fontSize: 11.5,
+            fontWeight: 500,
+            transition: "all 0.15s"
           }}
-          title="Settings"
+          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
+          Share
         </button>
 
-        <div style={{ position: "relative" }}>
-          <div 
-            onClick={() => setShowProfile(!showProfile)}
-            style={{ 
-              width: 32, 
-              height: 32, 
-              borderRadius: "50%", 
-              background: "linear-gradient(135deg, #d4a843, #c49633)", 
-              border: "2px solid rgba(255,255,255,0.12)", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center", 
-              fontSize: 11, 
-              color: "#0a0a0a", 
-              fontWeight: 700, 
-              cursor: "pointer" 
-            }}
-          >
-            KR
-          </div>
-        </div>
       </div>
     </div>
   );

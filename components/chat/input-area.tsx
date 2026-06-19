@@ -11,8 +11,6 @@ interface InputAreaProps {
 
 export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, isParsing = false }: InputAreaProps) {
   const [val, setVal] = useState("");
-  const [deepOn, setDeepOn] = useState(false);
-  const [micOn, setMicOn] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,86 +56,163 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
   };
 
   return (
-    <div className="nx-input-area" style={{ padding: "0 16px 14px", background: "#111111", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+    <div className="nx-input-area" style={{ 
+      padding: "0 24px 14px", 
+      background: "#000000", 
+      borderTop: "none", 
+      flexShrink: 0,
+      fontFamily: "var(--font-geist-sans)"
+    }}>
       
-      {/* Uploaded File Previews */}
-      {selectedFile && (
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 20, padding: "6px 14px", marginBottom: 8
-        }}>
-          <span>{selectedFile.type.includes("image") ? "🖼️" : "📄"}</span>
-          <span style={{ fontSize: 13, color: "#f0f0f0", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {selectedFile.name}
-          </span>
-          <button type="button" onClick={removeFile} aria-label="Remove file" style={{ background: "none", border: "none", color: "#888", cursor: "pointer" }}>✕</button>
-        </div>
-      )}
-
-      {(documentsCount > 0 || isParsing) && (
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 20, padding: "6px 14px", marginBottom: 8
-        }}>
-          <span>📚</span>
-          <span style={{ fontSize: 12, color: "#f0f0f0" }}>
-            {documentsCount} active document{documentsCount === 1 ? "" : "s"}
-          </span>
-          {isParsing && (
-            <span style={{ fontSize: 11, color: "#d4a843", display: "inline-flex", alignItems: "center", gap: 4 }}>
-              · Parsing new file...
+      {/* Input container matches the reference image */}
+      <div style={{
+        background: "#09090b",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: 4,
+        padding: "10px 12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        transition: "border-color 0.2s"
+      }}
+      className="nx-inp-wrapper"
+      >
+        
+        {/* Uploaded File Previews inside the input box */}
+        {selectedFile && (
+          <div style={{
+            display: "inline-flex", 
+            alignItems: "center", 
+            gap: 6,
+            background: "#18181b", 
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 3, 
+            padding: "4px 8px",
+            width: "fit-content"
+          }}>
+            <span style={{ fontSize: 11 }}>📄</span>
+            <span style={{ fontSize: 11, color: "#a1a1aa", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {selectedFile.name}
             </span>
-          )}
+            <button 
+              type="button" 
+              onClick={removeFile} 
+              aria-label="Remove file" 
+              style={{ 
+                background: "none", 
+                border: "none", 
+                color: "#71717a", 
+                cursor: "pointer",
+                fontSize: 10,
+                padding: "0 2px"
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Textarea + Action buttons row */}
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
+          
+          <textarea
+            ref={taRef}
+            style={{ 
+              flex: 1, 
+              background: "transparent", 
+              border: "none", 
+              color: "#f4f4f5", 
+              fontSize: 12.5, 
+              outline: "none", 
+              resize: "none", 
+              lineHeight: 1.55, 
+              minHeight: 22, 
+              maxHeight: 120 
+            }}
+            placeholder="Ask anything..."
+            value={val}
+            onChange={(e) => { setVal(e.target.value); resize(e); }}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
+            rows={1}
+          />
+
+          {/* Buttons aligned inside text container */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginBottom: 1 }}>
+            
+            {/* Hidden Input file connector */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileSelect} 
+              multiple
+              accept=".pdf,.txt,text/plain,application/pdf"
+              style={{ display: "none" }} 
+            />
+
+            {/* Paperclip upload trigger */}
+            <button 
+              type="button" 
+              onClick={triggerFileUpload}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#71717a",
+                cursor: "pointer",
+                padding: 4,
+                display: "flex",
+                alignItems: "center"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = "#ffffff"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "#71717a"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+            </button>
+
+            {/* Send Button: Solid white block containing black arrow pointing up */}
+            <button 
+              onClick={submit} 
+              disabled={!(val.trim() || selectedFile || documentsCount > 0)}
+              style={{
+                width: 24, 
+                height: 24, 
+                borderRadius: 3,
+                background: (val.trim() || selectedFile || documentsCount > 0) ? "#ffffff" : "#18181b",
+                border: "none", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                padding: 0, 
+                cursor: (val.trim() || selectedFile || documentsCount > 0) ? "pointer" : "default",
+                color: (val.trim() || selectedFile || documentsCount > 0) ? "#000000" : "#52525b",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+            </button>
+
+          </div>
+
         </div>
-      )}
 
-      <div className="nx-inp">
-        <button type="button" className="nx-meta" onClick={triggerFileUpload} aria-label="Attach file">📎</button>
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileSelect} 
-          multiple
-          accept=".pdf,.txt,text/plain,application/pdf"
-          style={{ display: "none" }} 
-        />
-
-        <button className="nx-meta">🖼️</button>
-
-        <textarea
-          ref={taRef}
-          style={{ flex: 1, background: "transparent", border: "none", color: "#f0f0f0", fontSize: 13, outline: "none", resize: "none", lineHeight: 1.55, minHeight: 22, maxHeight: 120 }}
-          placeholder="Ask a research question…"
-          value={val}
-          onChange={(e) => { setVal(e.target.value); resize(e); }}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
-          rows={1}
-        />
-
-        <button className="nx-meta" onClick={() => setMicOn(!micOn)} style={{ color: micOn ? "#d4a843" : undefined }}>🎤</button>
-
-        <button onClick={submit} style={{
-          width: 30, height: 30, borderRadius: 8,
-          background: (val.trim() || selectedFile || documentsCount > 0) ? "#d4a843" : "#1c1c1c",
-          border: "none", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0, marginBottom: 1, cursor: "pointer"
-        }}>
-          ➤
-        </button>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          <button className={`nx-itag${deepOn ? " on" : ""}`} onClick={() => setDeepOn(!deepOn)}>🔭 Deep Search</button>
-          <button className="nx-itag">📄 Docs</button>
-          <button className="nx-itag">🔬 Academic</button>
-          <button className="nx-itag">💻 Code</button>
-        </div>
-        <button style={{ background: "transparent", border: "none", fontSize: 11, color: "#888", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
-          Nexus Pro ▼
-        </button>
+      {/* Muted Disclaimer at the bottom */}
+      <div style={{ 
+        textAlign: "center", 
+        marginTop: 8, 
+        fontSize: 10, 
+        color: "#52525b",
+        fontFamily: "var(--font-space-grotesk)",
+        letterSpacing: "0.02em"
+      }}>
+        Nexus AI can make mistakes. Verify critical synthesis.
       </div>
+
     </div>
   );
 }
