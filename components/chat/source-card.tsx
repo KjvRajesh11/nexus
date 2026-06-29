@@ -109,7 +109,7 @@ export default function SourceCard({ source, isHighlighted, onClick }: SourceCar
             )}
           </span>
           <span style={{
-            fontSize: 9,
+            fontSize: "var(--fs-card)",
             fontWeight: 600,
             color: isHighlighted ? accentColor : "#a1a1aa",
             overflow: "hidden",
@@ -127,7 +127,7 @@ export default function SourceCard({ source, isHighlighted, onClick }: SourceCar
 
         {/* Excerpt Body */}
         <p style={{
-          fontSize: 9,
+          fontSize: "var(--fs-card)",
           color: "#71717a",
           lineHeight: 1.35,
           display: "-webkit-box",
@@ -146,7 +146,7 @@ export default function SourceCard({ source, isHighlighted, onClick }: SourceCar
           display: "inline-flex",
           alignItems: "center",
           gap: 2,
-          fontSize: 7.5,
+          fontSize: "var(--fs-meta)",
           fontWeight: 600,
           color: badge.color,
           background: badge.bg,
@@ -161,7 +161,7 @@ export default function SourceCard({ source, isHighlighted, onClick }: SourceCar
           <span>{badge.label}</span>
         </span>
         <span style={{
-          fontSize: 8.5,
+          fontSize: "var(--fs-meta)",
           color: isHighlighted ? accentColor : "#3f3f46",
           fontFamily: "var(--font-space-grotesk)",
           fontWeight: 600,
@@ -205,7 +205,7 @@ export function AddSourceCard({ onClick, isParsing }: { onClick: () => void; isP
         }
       }}
     >
-      <span style={{ fontSize: 13, color: "#52525b" }}>
+      <span style={{ fontSize: "var(--fs-heading-sm)", color: "#52525b" }}>
         {isParsing ? "⏳" : "+"}
       </span>
     </div>

@@ -4,12 +4,14 @@ import React from 'react';
 import SourceCard, { AddSourceCard } from './source-card';
 
 // RAG Evaluation panel definition (Polished version)
-const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
-  faithfulness: number;
-  contextRelevance: number;
-  answerRelevance: number;
-  explanation: string;
-} }) => {
+const RagEvaluationPanel = ({ evaluation }: {
+  evaluation?: {
+    faithfulness: number;
+    contextRelevance: number;
+    answerRelevance: number;
+    explanation: string;
+  }
+}) => {
   const [isOpen, setIsOpen] = React.useState(true);
   if (!evaluation) return null;
 
@@ -17,7 +19,7 @@ const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
 
   // Compute status colors and messages based on overall RAG health
   const averageScore = Math.round((faithfulness + contextRelevance + answerRelevance) / 3);
-  
+
   let statusText = "RAG Audit: High Quality";
   let statusColor = "#10b981"; // Soft Emerald Green
   if (averageScore < 60) {
@@ -43,12 +45,12 @@ const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
       border: "1px solid rgba(255, 255, 255, 0.05)",
       borderRadius: 4,
       padding: "10px 12px",
-      fontSize: 11.5,
+      fontSize: "var(--fs-meta)",
       color: "#c5c5c5",
       boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
       transition: "all 0.3s ease"
     }}>
-      <div 
+      <div
         onClick={() => setIsOpen(!isOpen)}
         style={{
           display: "flex",
@@ -56,23 +58,23 @@ const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
           alignItems: "center",
           cursor: "pointer",
           fontWeight: 600,
-          fontSize: 10,
+          fontSize: "var(--fs-meta)",
           color: "#8c8c8c",
           userSelect: "none"
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ 
-            width: 6, 
-            height: 6, 
-            borderRadius: "50%", 
-            background: statusColor, 
+          <span style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: statusColor,
             boxShadow: `0 0 8px ${statusColor}`,
-            display: "inline-block" 
+            display: "inline-block"
           }} />
           <span style={{ letterSpacing: "0.03em", fontFamily: "var(--font-space-grotesk)" }}>{statusText}</span>
         </span>
-        <span style={{ fontSize: 9, color: "#5c5c5c", display: "flex", alignItems: "center", gap: 3, fontFamily: "var(--font-space-grotesk)" }}>
+        <span style={{ fontSize: "var(--fs-meta)", color: "#5c5c5c", display: "flex", alignItems: "center", gap: 3, fontFamily: "var(--font-space-grotesk)" }}>
           {isOpen ? "▲ HIDE DIAGNOSTICS" : "▼ SHOW DIAGNOSTICS"}
         </span>
       </div>
@@ -96,8 +98,8 @@ const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
                   padding: "8px 6px",
                   textAlign: "center"
                 }}>
-                  <div style={{ fontSize: 8, color: "#777", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600, fontFamily: "var(--font-space-grotesk)" }}>{metric.label}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color, fontFamily: "monospace" }}>{metric.value}%</div>
+                  <div style={{ fontSize: "var(--fs-meta)", color: "#777", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600, fontFamily: "var(--font-space-grotesk)" }}>{metric.label}</div>
+                  <div style={{ fontSize: "var(--fs-heading-md)", fontWeight: 700, color, fontFamily: "monospace" }}>{metric.value}%</div>
                   <div style={{ width: "100%", height: 3, background: "rgba(255, 255, 255, 0.04)", borderRadius: 1.5, marginTop: 6, overflow: "hidden" }}>
                     <div style={{ width: `${metric.value}%`, height: "100%", background: color, borderRadius: 1.5, transition: "width 0.8s ease" }} />
                   </div>
@@ -114,12 +116,12 @@ const RagEvaluationPanel = ({ evaluation }: { evaluation?: {
               borderLeft: `2px solid ${statusColor}`,
               padding: "6px 10px",
               borderRadius: "0 4px 4px 0",
-              fontSize: 10.5,
+              fontSize: "var(--fs-meta)",
               lineHeight: 1.5,
               color: "#9c9c9c",
               fontFamily: "var(--font-geist-sans)"
             }}>
-              <span style={{ fontWeight: 600, color: "#d4a843", marginRight: 4, letterSpacing: "0.02em", textTransform: "uppercase", fontSize: 9, fontFamily: "var(--font-space-grotesk)" }}>Audit Log //</span> 
+              <span style={{ fontWeight: 600, color: "#d4a843", marginRight: 4, letterSpacing: "0.02em", textTransform: "uppercase", fontSize: "var(--fs-meta)", fontFamily: "var(--font-space-grotesk)" }}>Audit Log //</span>
               {explanation}
             </div>
           )}
@@ -174,17 +176,17 @@ function parseMessageContent(htmlContent: string) {
   // Split into lines
   const lines = htmlContent.split("<br/>");
   const parsedElements: React.ReactNode[] = [];
-  
+
   let inTable = false;
   let tableHeaders: string[] = [];
   let tableRows: string[][] = [];
 
   const renderTable = (headers: string[], rows: string[][], key: number) => {
     return (
-      <div 
-        key={key} 
-        style={{ 
-          background: "#09090b", 
+      <div
+        key={key}
+        style={{
+          background: "#09090b",
           border: "1px solid rgba(255, 255, 255, 0.08)",
           borderRadius: 4,
           margin: "12px 0",
@@ -200,7 +202,7 @@ function parseMessageContent(htmlContent: string) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          fontSize: 9.5,
+          fontSize: "var(--fs-meta)",
           color: "#71717a",
           fontWeight: 600,
           fontFamily: "var(--font-space-grotesk)",
@@ -220,11 +222,11 @@ function parseMessageContent(htmlContent: string) {
         </div>
 
         {/* Table Tag */}
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 11.5 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "var(--fs-chat)" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
               {headers.map((h, i) => (
-                <th key={i} style={{ padding: "8px 12px", fontWeight: 500, color: "#71717a", fontSize: 10.5, fontFamily: "var(--font-space-grotesk)" }}>
+                <th key={i} style={{ padding: "8px 12px", fontWeight: 500, color: "#71717a", fontSize: "var(--fs-meta)", fontFamily: "var(--font-space-grotesk)" }}>
                   {h}
                 </th>
               ))}
@@ -238,12 +240,12 @@ function parseMessageContent(htmlContent: string) {
                   const isNumber = !isNaN(Number(cell.trim()));
                   const numValue = Number(cell.trim());
                   const shouldHighlight = isNumber && numValue < 350 && ci === row.length - 1;
-                  
+
                   return (
-                    <td 
-                      key={ci} 
-                      style={{ 
-                        padding: "8px 12px", 
+                    <td
+                      key={ci}
+                      style={{
+                        padding: "8px 12px",
                         color: shouldHighlight ? "#f59e0b" : "#f4f4f5",
                         fontWeight: shouldHighlight ? 600 : 400,
                         fontFamily: isNumber ? "monospace" : "inherit"
@@ -268,7 +270,7 @@ function parseMessageContent(htmlContent: string) {
     if (rawLine.startsWith("|") && rawLine.endsWith("|")) {
       // Split cells
       const cells = rawLine.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
-      
+
       // Check if it's a separator line (e.g. |---|---|)
       const isSeparator = cells.every(c => c.startsWith("-") || c === "");
 
@@ -297,9 +299,9 @@ function parseMessageContent(htmlContent: string) {
       // Add normal line text
       if (rawLine !== "" || lines[idx] === "") {
         parsedElements.push(
-          <div 
-            key={idx} 
-            dangerouslySetInnerHTML={{ __html: lines[idx] }} 
+          <div
+            key={idx}
+            dangerouslySetInnerHTML={{ __html: lines[idx] }}
             style={{ marginBottom: lines[idx] === "" ? 12 : 6, display: "block" }}
           />
         );
@@ -392,7 +394,7 @@ export default function MessageBubble({
   };
 
   return (
-    <div 
+    <div
       className="nx-fade"
       style={{
         display: "flex",
@@ -406,18 +408,18 @@ export default function MessageBubble({
       {/* Avatar column */}
       {isUser ? (
         // User avatar block: dark grey square with user profile outline
-        <div style={{ 
-          width: 22, 
-          height: 22, 
-          background: "#18181b", 
+        <div style={{
+          width: 22,
+          height: 22,
+          background: "#18181b",
           border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: 3, 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "center", 
-          color: "#a1a1aa", 
-          flexShrink: 0, 
-          marginTop: 2 
+          borderRadius: 3,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#a1a1aa",
+          flexShrink: 0,
+          marginTop: 2
         }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -426,20 +428,20 @@ export default function MessageBubble({
         </div>
       ) : (
         // AI avatar block: white square with black lightning bolt
-        <div style={{ 
-          width: 22, 
-          height: 22, 
-          background: "#ffffff", 
-          borderRadius: 3, 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "center", 
-          color: "#000000", 
-          flexShrink: 0, 
-          marginTop: 2 
+        <div style={{
+          width: 22,
+          height: 22,
+          background: "#ffffff",
+          borderRadius: 3,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#000000",
+          flexShrink: 0,
+          marginTop: 2
         }}>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M9.5 0L2 9h5v7l7.5-9H9v-7L9.5 0z"/>
+            <path d="M9.5 0L2 9h5v7l7.5-9H9v-7L9.5 0z" />
           </svg>
         </div>
       )}
@@ -459,7 +461,7 @@ export default function MessageBubble({
                 borderRadius: 3,
                 padding: "4px 8px",
                 width: "fit-content",
-                fontSize: 10.5,
+                fontSize: "var(--fs-meta)",
                 color: "#a1a1aa"
               }}>
                 <span>📄</span>
@@ -468,9 +470,9 @@ export default function MessageBubble({
                 </span>
               </div>
             )}
-            <p style={{ 
-              fontSize: 12.5, 
-              lineHeight: 1.55, 
+            <p style={{
+              fontSize: "var(--fs-chat)",
+              lineHeight: 1.55,
               color: "#e4e4e7",
               whiteSpace: "pre-wrap"
             }}>
@@ -480,14 +482,14 @@ export default function MessageBubble({
         ) : (
           // AI output
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            
+
             {/* Citation Sources Cards deck above response text */}
             {message.sources && message.sources.length > 0 && (
-              <div 
-                style={{ 
-                  display: "flex", 
-                  gap: 6, 
-                  overflowX: "auto", 
+              <div
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  overflowX: "auto",
                   paddingBottom: 8,
                   marginTop: 2,
                   width: "100%"
@@ -495,7 +497,7 @@ export default function MessageBubble({
                 className="nx-scroll"
               >
                 {message.sources.map((source) => (
-                  <SourceCard 
+                  <SourceCard
                     key={source.id}
                     source={source}
                     isHighlighted={source.id === activeCitationId}
@@ -503,7 +505,7 @@ export default function MessageBubble({
                   />
                 ))}
                 {onUploadClick && (
-                  <AddSourceCard 
+                  <AddSourceCard
                     onClick={onUploadClick}
                     isParsing={isParsing}
                   />
@@ -512,9 +514,9 @@ export default function MessageBubble({
             )}
 
             {/* Generated answer text / parsed tables */}
-            <div style={{ 
-              fontSize: 12.5, 
-              lineHeight: 1.6, 
+            <div style={{
+              fontSize: "var(--fs-chat)",
+              lineHeight: 1.6,
               color: "#e4e4e7"
             }}>
               {parseMessageContent(message.html || "")}
@@ -525,7 +527,7 @@ export default function MessageBubble({
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 {[
                   { k: "copy", label: "Copy", icon: "📋", action: () => navigator.clipboard.writeText(message.html?.replace(/<[^>]*>/g, "") || "") },
-                  { k: "share", label: "Share", icon: "🔗", action: () => {} },
+                  { k: "share", label: "Share", icon: "🔗", action: () => { } },
                   { k: "refresh", label: "Retry", icon: "🔄", action: () => onFollowup && message.userQuery && onFollowup(message.userQuery) }
                 ].map((item) => (
                   <button
@@ -535,7 +537,7 @@ export default function MessageBubble({
                     style={{
                       background: "transparent",
                       border: "none",
-                      fontSize: 10,
+                      fontSize: "var(--fs-meta)",
                       color: "#52525b",
                       padding: "3px 6px",
                       borderRadius: 3,
@@ -569,7 +571,7 @@ export default function MessageBubble({
                     background: feedback === "up" ? "rgba(16, 185, 129, 0.08)" : "transparent",
                     border: feedback === "up" ? "1px solid rgba(16, 185, 129, 0.25)" : "none",
                     color: feedback === "up" ? "#10b981" : "#52525b",
-                    fontSize: 10,
+                    fontSize: "var(--fs-meta)",
                     padding: "3px 6px",
                     borderRadius: 3,
                     cursor: submittingFeedback ? "not-allowed" : "pointer",
@@ -589,7 +591,7 @@ export default function MessageBubble({
                     background: feedback === "down" ? "rgba(239, 68, 68, 0.08)" : "transparent",
                     border: feedback === "down" ? "1px solid rgba(239, 68, 68, 0.25)" : "none",
                     color: feedback === "down" ? "#ef4444" : "#52525b",
-                    fontSize: 10,
+                    fontSize: "var(--fs-meta)",
                     padding: "3px 6px",
                     borderRadius: 3,
                     cursor: submittingFeedback ? "not-allowed" : "pointer",
@@ -617,7 +619,7 @@ export default function MessageBubble({
                 flexDirection: "column",
                 gap: 6
               }}>
-                <div style={{ fontSize: 10, color: "#a1a1aa", fontWeight: 500, fontFamily: "var(--font-space-grotesk)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                <div style={{ fontSize: "var(--fs-meta)", color: "#a1a1aa", fontWeight: 500, fontFamily: "var(--font-space-grotesk)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
                   Feedback // Correct Reference or Fact
                 </div>
                 <textarea
@@ -631,7 +633,7 @@ export default function MessageBubble({
                     border: "1px solid rgba(255,255,255,0.08)",
                     borderRadius: 3,
                     color: "#f4f4f5",
-                    fontSize: 11,
+                    fontSize: "var(--fs-card)",
                     padding: "6px",
                     outline: "none",
                     resize: "none",
@@ -646,7 +648,7 @@ export default function MessageBubble({
                       background: "transparent",
                       border: "none",
                       color: "#71717a",
-                      fontSize: 10,
+                      fontSize: "var(--fs-meta)",
                       cursor: "pointer",
                       padding: "2px 8px",
                       fontFamily: "var(--font-space-grotesk)"
@@ -661,7 +663,7 @@ export default function MessageBubble({
                       background: "#ffffff",
                       border: "none",
                       color: "#000000",
-                      fontSize: 10,
+                      fontSize: "var(--fs-meta)",
                       fontWeight: 600,
                       cursor: "pointer",
                       padding: "2px 8px",
@@ -678,7 +680,7 @@ export default function MessageBubble({
             {feedbackSent && (
               <div style={{
                 marginTop: 6,
-                fontSize: 10,
+                fontSize: "var(--fs-meta)",
                 color: "#10b981",
                 fontFamily: "var(--font-space-grotesk)",
                 fontWeight: 500,
@@ -697,8 +699,8 @@ export default function MessageBubble({
             {message.followups && message.followups.length > 0 && onFollowup && (
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                 {message.followups.map((f, i) => (
-                  <button 
-                    key={i} 
+                  <button
+                    key={i}
                     className="nx-fu"
                     onClick={() => onFollowup(f)}
                     style={{
@@ -707,7 +709,7 @@ export default function MessageBubble({
                       borderRadius: 20,
                       color: "#a1a1aa",
                       padding: "4px 10px",
-                      fontSize: 10.5,
+                      fontSize: "var(--fs-meta)",
                       cursor: "pointer",
                       fontFamily: "var(--font-space-grotesk)",
                       transition: "all 0.15s"

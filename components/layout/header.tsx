@@ -34,7 +34,7 @@ export default function Header({
       
       {/* Model Selection Dropdown (Left side) */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 11.5, color: "#52525b", fontWeight: 500 }}>Model:</span>
+        <span style={{ fontSize: "var(--fs-meta)", color: "#52525b", fontWeight: 500 }}>Model:</span>
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
@@ -43,7 +43,7 @@ export default function Header({
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 4,
           padding: "4px 8px",
-          fontSize: 11.5,
+          fontSize: "var(--fs-meta)",
           color: "#ffffff",
           cursor: "pointer",
           userSelect: "none"
@@ -84,7 +84,7 @@ export default function Header({
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 4,
               padding: "5px 10px 5px 28px",
-              fontSize: 12,
+              fontSize: "var(--fs-meta)",
               color: "#ffffff",
               outline: "none",
               fontFamily: "var(--font-geist-sans)"
@@ -138,7 +138,7 @@ export default function Header({
             color: "#ffffff",
             padding: "0 10px",
             cursor: "pointer",
-            fontSize: 11.5,
+            fontSize: "var(--fs-meta)",
             fontWeight: 500,
             transition: "all 0.15s"
           }}

@@ -13,8 +13,8 @@ export default function ProfileMenu({ onClose, onSettings }: ProfileMenuProps) {
         borderBottom: "1px solid rgba(255,255,255,0.07)", 
         marginBottom: 4 
       }}>
-        <div style={{ fontSize: 13, fontWeight: 500 }}>Kjv Rajesh</div>
-        <div style={{ fontSize: 11, color: "#888" }}>rajeshwind123@gmail.com</div>
+        <div style={{ fontSize: "var(--fs-card)", fontWeight: 500 }}>Kjv Rajesh</div>
+        <div style={{ fontSize: "var(--fs-meta)", color: "#888" }}>rajeshwind123@gmail.com</div>
       </div>
 
       <button className="nx-pmitem" onClick={onClose}>

@@ -90,8 +90,8 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
             padding: "4px 8px",
             width: "fit-content"
           }}>
-            <span style={{ fontSize: 11 }}>📄</span>
-            <span style={{ fontSize: 11, color: "#a1a1aa", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "var(--fs-meta)" }}>📄</span>
+            <span style={{ fontSize: "var(--fs-meta)", color: "#a1a1aa", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {selectedFile.name}
             </span>
             <button 
@@ -103,7 +103,7 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
                 border: "none", 
                 color: "#71717a", 
                 cursor: "pointer",
-                fontSize: 10,
+                fontSize: "var(--fs-meta)",
                 padding: "0 2px"
               }}
             >
@@ -122,7 +122,7 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
               background: "transparent", 
               border: "none", 
               color: "#f4f4f5", 
-              fontSize: 12.5, 
+              fontSize: "var(--fs-input)", 
               outline: "none", 
               resize: "none", 
               lineHeight: 1.55, 
@@ -205,7 +205,7 @@ export default function InputArea({ onSend, onAttachFiles, documentsCount = 0, i
       <div style={{ 
         textAlign: "center", 
         marginTop: 8, 
-        fontSize: 10, 
+        fontSize: "var(--fs-meta)", 
         color: "#52525b",
         fontFamily: "var(--font-space-grotesk)",
         letterSpacing: "0.02em"

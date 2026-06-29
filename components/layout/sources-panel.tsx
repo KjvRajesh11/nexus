@@ -51,24 +51,24 @@ export default function SourcesPanel({
   }, [activeCitationId]);
 
   return (
-    <div className="nx-sources-panel" style={{ 
-      width: 278, 
-      background: "#111111", 
-      borderLeft: "1px solid rgba(255,255,255,0.07)", 
-      display: "flex", 
-      flexDirection: "column", 
-      flexShrink: 0, 
-      overflow: "hidden" 
+    <div className="nx-sources-panel" style={{
+      width: 278,
+      background: "#111111",
+      borderLeft: "1px solid rgba(255,255,255,0.07)",
+      display: "flex",
+      flexDirection: "column",
+      flexShrink: 0,
+      overflow: "hidden"
     }}>
       {/* Header */}
-      <div style={{ 
-        padding: "12px 14px 9px", 
-        borderBottom: "1px solid rgba(255,255,255,0.07)", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "space-between" 
+      <div style={{
+        padding: "12px 14px 9px",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--fs-card)", fontWeight: 500 }}>
           Sources & Insights
         </div>
         <div style={{ display: "flex", gap: 2 }}>
@@ -77,17 +77,17 @@ export default function SourcesPanel({
             { id: "Sources", label: "Citations" },
             { id: "Notes", label: "Notes" }
           ].map(t => (
-            <button 
-              key={t.id} 
+            <button
+              key={t.id}
               onClick={() => setActiveTab(t.id)}
-              style={{ 
-                padding: "3px 9px", 
-                borderRadius: 5, 
-                fontSize: 11, 
-                color: activeTab === t.id ? "#f0f0f0" : "#666", 
-                cursor: "pointer", 
-                border: "none", 
-                background: activeTab === t.id ? "#222" : "transparent" 
+              style={{
+                padding: "3px 9px",
+                borderRadius: 5,
+                fontSize: "var(--fs-meta)",
+                color: activeTab === t.id ? "#f0f0f0" : "#666",
+                cursor: "pointer",
+                border: "none",
+                background: activeTab === t.id ? "#222" : "transparent"
               }}
             >
               {t.label}
@@ -100,7 +100,7 @@ export default function SourcesPanel({
         {activeTab === "Library" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {/* Upload Zone */}
-            <div 
+            <div
               onClick={() => {
                 if (isParsing) return;
                 const input = document.createElement("input");
@@ -123,22 +123,22 @@ export default function SourcesPanel({
                 transition: "all 0.2s ease"
               }}
             >
-              <span style={{ fontSize: 18, display: "block", marginBottom: 4 }}>📥</span>
-              <span style={{ fontSize: 11, fontWeight: 500, color: "#f0f0f0" }}>
+              <span style={{ fontSize: "var(--fs-heading-md)", display: "block", marginBottom: 4 }}>📥</span>
+              <span style={{ fontSize: "var(--fs-card)", fontWeight: 500, color: "#f0f0f0" }}>
                 {isParsing ? "Parsing files..." : "Upload files"}
               </span>
-              <p style={{ fontSize: 9, color: "#5a5a5a", marginTop: 2 }}>PDF or Text files</p>
+              <p style={{ fontSize: "var(--fs-meta)", color: "#5a5a5a", marginTop: 2 }}>PDF or Text files</p>
             </div>
 
             {/* Document Library List */}
-            <div style={{ fontSize: 9, color: "#5a5a5a", letterSpacing: "0.08em", textTransform: "uppercase", padding: "8px 0 4px" }}>
+            <div style={{ fontSize: "var(--fs-meta)", color: "#5a5a5a", letterSpacing: "0.08em", textTransform: "uppercase", padding: "8px 0 4px" }}>
               Documents ({documents.length})
             </div>
 
             {documents.length > 0 || isParsing ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {documents.map((doc) => (
-                  <div 
+                  <div
                     key={doc.id}
                     style={{
                       background: "#161616",
@@ -152,25 +152,25 @@ export default function SourcesPanel({
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden", flex: 1 }}>
-                      <span style={{ fontSize: 16, flexShrink: 0 }}>📄</span>
+                      <span style={{ fontSize: "var(--fs-heading-md)", flexShrink: 0 }}>📄</span>
                       <div style={{ overflow: "hidden" }}>
-                        <p style={{ fontSize: 11, fontWeight: 500, color: "#f0f0f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={doc.name}>
+                        <p style={{ fontSize: "var(--fs-card)", fontWeight: 500, color: "#f0f0f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={doc.name}>
                           {doc.name}
                         </p>
-                        <p style={{ fontSize: 9, color: "#5a5a5a", marginTop: 1 }}>
+                        <p style={{ fontSize: "var(--fs-meta)", color: "#5a5a5a", marginTop: 1 }}>
                           {(doc.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => onDeleteDocument?.(doc.id)}
                       style={{
                         background: "none",
                         border: "none",
                         color: "#888",
                         cursor: "pointer",
-                        fontSize: 12,
+                        fontSize: "var(--fs-card)",
                         padding: "2px 4px"
                       }}
                     >
@@ -179,7 +179,7 @@ export default function SourcesPanel({
                   </div>
                 ))}
                 {isParsing && (
-                  <div 
+                  <div
                     className="nx-skeleton"
                     style={{
                       height: 38,
@@ -190,7 +190,7 @@ export default function SourcesPanel({
                 )}
               </div>
             ) : (
-              <div style={{ textAlign: "center", padding: "24px 10px", color: "#5a5a5a", fontSize: 11 }}>
+              <div style={{ textAlign: "center", padding: "24px 10px", color: "#5a5a5a", fontSize: "var(--fs-card)" }}>
                 No active documents.
               </div>
             )}
@@ -198,11 +198,11 @@ export default function SourcesPanel({
         ) : activeTab === "Sources" ? (
           <>
             {/* Referencing header */}
-            <div style={{ 
-              fontSize: 9, 
-              color: "#5a5a5a", 
-              letterSpacing: "0.08em", 
-              textTransform: "uppercase", 
+            <div style={{
+              fontSize: "var(--fs-meta)",
+              color: "#5a5a5a",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
               padding: "7px 0 9px",
               display: "flex",
               justifyContent: "space-between",
@@ -210,9 +210,9 @@ export default function SourcesPanel({
             }}>
               <span>Referenced · {sources.length} sources</span>
               {activeCitationId !== null && (
-                <button 
+                <button
                   onClick={() => onCitationHighlight(null)}
-                  style={{ background: "none", border: "none", color: "#d4a843", fontSize: 9, cursor: "pointer" }}
+                  style={{ background: "none", border: "none", color: "#d4a843", fontSize: "var(--fs-meta)", cursor: "pointer" }}
                 >
                   Clear Highlight
                 </button>
@@ -249,23 +249,23 @@ export default function SourcesPanel({
                             borderRadius: 4,
                             background: isHighlighted ? "#d4a843" : "rgba(255,255,255,0.06)",
                             color: isHighlighted ? "#0a0a0a" : "#888",
-                            fontSize: 10,
+                            fontSize: "12px",
                             fontWeight: 600,
                           }}>
                             {source.id}
                           </span>
-                          <span style={{ fontSize: 11, fontWeight: 500, color: isHighlighted ? "#d4a843" : "#f0f0f0" }}>
+                          <span style={{ fontSize: "18px", fontWeight: 500, color: isHighlighted ? "#d4a843" : "#f0f0f0" }}>
                             Paragraph {source.id}
                           </span>
                         </div>
                         {source.documentName && (
-                          <span style={{ fontSize: 9, color: "#888", paddingLeft: 28, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={source.documentName}>
+                          <span style={{ fontSize: "14px", color: "#888", paddingLeft: 28, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={source.documentName}>
                             source: {source.documentName}
                           </span>
                         )}
                       </div>
                       <p style={{
-                        fontSize: 12,
+                        fontSize: "16px",
                         lineHeight: 1.5,
                         color: isHighlighted ? "#f0f0f0" : "#a0a0a0",
                         display: "-webkit-box",
@@ -283,8 +283,8 @@ export default function SourcesPanel({
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 10px", textAlign: "center" }}>
-                <span style={{ fontSize: 24, marginBottom: 8 }}>📄</span>
-                <p style={{ color: "#666", fontSize: 12, lineHeight: 1.5 }}>
+                <span style={{ fontSize: "var(--fs-heading-lg)", marginBottom: 8 }}>📄</span>
+                <p style={{ color: "#666", fontSize: "var(--fs-card)", lineHeight: 1.5 }}>
                   No sources referenced in this response yet.<br />
                   Upload a document and ask a question to see citations.
                 </p>
@@ -292,7 +292,7 @@ export default function SourcesPanel({
             )}
           </>
         ) : (
-          <div style={{ color: "#666", fontSize: 12, padding: "20px 10px", textAlign: "center" }}>
+          <div style={{ color: "#666", fontSize: "var(--fs-card)", padding: "20px 10px", textAlign: "center" }}>
             Notes and annotations workspace coming soon...
           </div>
         )}

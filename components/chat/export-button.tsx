@@ -40,7 +40,7 @@ export default function ExportButton({ messages }: ExportButtonProps) {
           border: '1px solid rgba(255,255,255,0.08)',
           background: 'transparent',
           color: '#888',
-          fontSize: 12,
+          fontSize: "var(--fs-meta)",
           cursor: 'pointer',
           transition: 'all 0.15s ease',
           outline: 'none',
@@ -106,7 +106,7 @@ export default function ExportButton({ messages }: ExportButtonProps) {
               gap: 8,
               padding: '7px 10px',
               borderRadius: 6,
-              fontSize: 11,
+              fontSize: "var(--fs-meta)",
               color: '#a0a0a0',
               border: 'none',
               background: 'transparent',
@@ -124,7 +124,7 @@ export default function ExportButton({ messages }: ExportButtonProps) {
               e.currentTarget.style.background = 'transparent';
             }}
           >
-            <span style={{ fontSize: 13 }}>📄</span>
+            <span style={{ fontSize: "var(--fs-heading-sm)" }}>📄</span>
             <span>Export as Markdown</span>
           </button>
           <button
@@ -139,7 +139,7 @@ export default function ExportButton({ messages }: ExportButtonProps) {
               gap: 8,
               padding: '7px 10px',
               borderRadius: 6,
-              fontSize: 11,
+              fontSize: "var(--fs-meta)",
               color: '#a0a0a0',
               border: 'none',
               background: 'transparent',
@@ -157,7 +157,7 @@ export default function ExportButton({ messages }: ExportButtonProps) {
               e.currentTarget.style.background = 'transparent';
             }}
           >
-            <span style={{ fontSize: 13 }}>🖨️</span>
+            <span style={{ fontSize: "var(--fs-heading-sm)" }}>🖨️</span>
             <span>Export as PDF</span>
           </button>
         </div>
