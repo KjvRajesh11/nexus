@@ -12,13 +12,13 @@ export class BM25 {
   private k1: number;
   private b: number;
   private documents: BM25Doc[] = [];
-  
+
   // Pre-computed stats
   private docTokens: string[][] = [];
   private docLengths: number[] = [];
   private avgDocLength = 0;
   private N = 0;
-  
+
   // Term frequencies per document: termsMap[docIndex][term] = count
   private termFreqs: Map<string, number>[] = [];
   // Document frequencies: how many documents contain a term
@@ -105,12 +105,12 @@ export class BM25 {
         if (tf === 0) continue;
 
         const termIdf = this.idf(term);
-        
+
         // BM25 term weighting formula:
         // score += IDF * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * (docLen / avgDocLen)))
         const numerator = tf * (this.k1 + 1);
         const denominator = tf + this.k1 * (1 - this.b + this.b * (docLen / (this.avgDocLength || 1)));
-        
+
         score += termIdf * (numerator / denominator);
       }
 

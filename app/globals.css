@@ -82,6 +82,15 @@
   --sidebar-accent-foreground: #f4f4f5;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #d4a843;
+  /* Typography Scale Variables */
+  --fs-base: 14.5px;
+  --fs-chat: 14px;
+  --fs-meta: 11px;
+  --fs-card: 10.5px;
+  --fs-input: 13.5px;
+  --fs-heading-sm: 11.5px;
+  --fs-heading-md: 15px;
+  --fs-heading-lg: 23px;
 }
 
 .dark {
@@ -117,9 +126,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }

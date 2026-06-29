@@ -229,10 +229,15 @@ async function generateNode(state: typeof RAGGraphState.State, config?: any) {
   const retryCount = state.retryCount || 0;
   const onToken = config?.configurable?.onToken;
   const onStep = config?.configurable?.onStep;
+  const onReset = config?.configurable?.onReset;
+
+  if (onReset && retryCount > 0) {
+    onReset();
+  }
 
   if (onStep) {
     const msg = retryCount > 0
-      ? `Re-synthesizing answer addressing audit gaps (attempt ${retryCount + 1})...`
+      ? `Re-synthesizing answer addressing audit gaps (attempt ${retryCount + 1}/3)...`
       : "Synthesizing answer grounded in retrieved literature...";
     onStep(msg, { phase: "generate" });
   }
@@ -373,9 +378,8 @@ async function evaluateNode(state: typeof RAGGraphState.State, config?: any) {
   const responseHtml = state.responseHtml || "";
   const retryCount = state.retryCount || 0;
   const onStep = config?.configurable?.onStep;
-
   if (onStep) {
-    onStep(`Auditing response grounding and relevance (attempt ${retryCount + 1}/2)...`, { phase: "evaluate" });
+    onStep(`Auditing response grounding and relevance (attempt ${retryCount + 1}/3)...`, { phase: "evaluate" });
   }
 
   const evaluation = await evaluateRAG(query, sources, responseHtml);
@@ -397,6 +401,17 @@ async function evaluateNode(state: typeof RAGGraphState.State, config?: any) {
     }
   }
 
+  let finalResponseHtml = responseHtml;
+  // If the final verdict is not "pass" after maximum retries (2), append the transparency note
+  if (verdict !== "pass" && retryCount >= 2) {
+    const note = "\n\n[Note: This response was generated after multiple attempts. Some information may be incomplete or require further verification.]";
+    finalResponseHtml = responseHtml + note;
+    const onToken = config?.configurable?.onToken;
+    if (onToken) {
+      onToken(note);
+    }
+  }
+
   // Send evaluation result to client immediately if the callback exists
   const onEvaluation = config?.configurable?.onEvaluation;
   if (onEvaluation) {
@@ -411,7 +426,8 @@ async function evaluateNode(state: typeof RAGGraphState.State, config?: any) {
     refinementKeywords: evaluation.refinementKeywords || [],
     retryWorthiness,
     overallVerdict: verdict,
-    retryCount: retryCount + 1
+    retryCount: retryCount + 1,
+    responseHtml: finalResponseHtml
   };
 }
 
@@ -430,8 +446,8 @@ function routeAfterEvaluate(state: typeof RAGGraphState.State) {
   // 1. The evaluator explicitly says retrying will help (retryWorthiness = true)
   // 2. The verdict is not "pass" (there are actual quality issues)
   // 3. Deep Search is enabled (user opted into thorough mode)
-  // 4. Retry budget not exhausted (max 2 retries)
-  if (retryWorthiness && verdict !== "pass" && retryCount < 2 && settings.deepSearch) {
+  // 4. Retry budget not exhausted (max 2 retries, meaning retryCount is 1 or 2)
+  if (retryWorthiness && verdict !== "pass" && retryCount < 3 && settings.deepSearch) {
     console.log(`[Graph Router] Verdict: ${verdict}, retryWorthiness: true. Routing back to query rewrite (Attempt ${retryCount}/2)`);
     return "rewriteQuery";
   }

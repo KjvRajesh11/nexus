@@ -105,8 +105,8 @@ export class RecursiveCharacterTextSplitter {
         if (parts.length >= 3) return true; // 3+ columns is definitely a table
 
         // For 2 columns, verify it's data-heavy (number, date, short code, currency etc.)
-        const hasDataOrShortText = parts.some(p => 
-          /^\$?[\d,.-]+%?$/.test(p.trim()) || 
+        const hasDataOrShortText = parts.some(p =>
+          /^\$?[\d,.-]+%?$/.test(p.trim()) ||
           p.trim().length <= 15
         );
         if (hasDataOrShortText) return true;
@@ -221,11 +221,11 @@ export class RecursiveCharacterTextSplitter {
     // Select the first separator and split
     const separator = separators[0];
     const nextSeparators = separators.slice(1);
-    
+
     // We split, but we want to preserve the separator if it is something like a period.
     // For simplicity, standard string split:
     const parts = this.splitBySeparator(text, separator);
-    
+
     const finalChunks: string[] = [];
     let currentChunk = "";
 
@@ -237,10 +237,10 @@ export class RecursiveCharacterTextSplitter {
           finalChunks.push(currentChunk);
           currentChunk = "";
         }
-        
+
         // Recursively split the large part
         const subChunks = this.split(part, nextSeparators);
-        
+
         // Merge sub-chunks into final list, handling overlap at boundaries
         for (const subChunk of subChunks) {
           if (currentChunk === "") {
@@ -281,7 +281,7 @@ export class RecursiveCharacterTextSplitter {
     if (separator === "") {
       return text.split("");
     }
-    
+
     const parts = text.split(separator);
     if (parts.length <= 1) {
       return parts;
@@ -308,7 +308,7 @@ export class RecursiveCharacterTextSplitter {
    */
   private getOverlapText(currentChunk: string, nextPart: string): string {
     if (this.chunkOverlap <= 0) return "";
-    
+
     const rawOverlap = currentChunk.slice(-this.chunkOverlap);
     // Find the first space/newline in the overlap to avoid mid-word cuts
     const spaceIndex = rawOverlap.indexOf(" ");

@@ -167,7 +167,7 @@ export class RAGEngine {
               };
             } catch (embedErr) {
               console.error(`[RAGEngine] Failed to embed academic chunk: ${chunk.documentName}`, embedErr);
-              return { ...chunk, similarity: 0.3 }; // Fallback similarity
+              return { ...chunk, similarity: 0.6 }; // Fallback similarity (higher proxy for academic metadata matching)
             }
           });
           
@@ -206,7 +206,8 @@ export class RAGEngine {
           const chunk = localChunks[match.index];
           // Determine or proxy similarity score
           const localMatch = localVectorResults.find(v => v.id === chunk.id);
-          const similarity = localMatch ? localMatch.similarity : Math.max(0.2, 0.6 - (idx * 0.02));
+          // Boost the proxy score of keyword matches so they are not unfairly penalized compared to semantic matches
+          const similarity = localMatch ? localMatch.similarity : Math.max(0.4, 0.8 - (idx * 0.04));
           
           return {
             ...chunk,
@@ -275,7 +276,7 @@ export class RAGEngine {
       const rerankStart = performance.now();
       try {
         console.log("[RAGEngine] Deep Search active. Re-ranking candidate chunks with LLM...");
-        const prompt = `You are an elite search evaluator. Analyze the relevance of the following document chunks to the search query: "${vectorQuery}".
+         const prompt = `You are an elite search evaluator. Analyze the relevance of the following document chunks to the search query: "${vectorQuery}".
 Determine how helpful each chunk is for writing a comprehensive, factual research answer.
 
 For each chunk, assign a relevance score between 0 and 10.
@@ -283,10 +284,13 @@ For each chunk, assign a relevance score between 0 and 10.
 Chunks:
 ${topCandidates.map((c, i) => `--- CHUNK [${i}] (from ${c.documentName}) ---\n${c.text}`).join("\n\n")}
 
-Return a JSON object containing the indices sorted by relevance (highest score first). Filter out any chunks with score < 3.
+Return a JSON object containing the ranked chunks with their index and relevance score (highest score first). Filter out any chunks with score < 3.
 You MUST output your response in strict JSON format matching this schema:
 {
-  "sortedIndices": [number, number, ...]
+  "rankedChunks": [
+    { "index": number, "score": number },
+    ...
+  ]
 }
 `;
 
@@ -299,12 +303,12 @@ You MUST output your response in strict JSON format matching this schema:
           body: JSON.stringify({
             model: "llama-3.1-8b-instant",
             messages: [
-              { role: "system", content: "You are an expert search engine auditor that outputs indices in strict JSON." },
+              { role: "system", content: "You are an expert search engine auditor that outputs ranked chunks in strict JSON." },
               { role: "user", content: prompt }
             ],
             response_format: { type: "json_object" },
             temperature: 0.1,
-            max_tokens: 300,
+            max_tokens: 350,
           }),
         });
 
@@ -313,17 +317,22 @@ You MUST output your response in strict JSON format matching this schema:
           const content = data.choices?.[0]?.message?.content;
           if (content) {
             const parsed = JSON.parse(content);
-            const sortedIndices: number[] = parsed.sortedIndices || [];
+            const rankedChunks: { index: number; score: number }[] = parsed.rankedChunks || [];
             
-            // Map sortedIndices back to topCandidates
+            // Map rankedChunks back to topCandidates, boosting similarity based on LLM score
             const reRanked: typeof topCandidates = [];
             const seen = new Set<string>();
 
-            for (const idx of sortedIndices) {
+            for (const item of rankedChunks) {
+              const idx = item.index;
+              const score = item.score;
               if (idx >= 0 && idx < topCandidates.length) {
                 const cand = topCandidates[idx];
                 if (!seen.has(cand.id)) {
                   seen.add(cand.id);
+                  // Update similarity: combine original embedding similarity with the LLM's deep relevance score
+                  const llmSimilarity = Math.max(0, Math.min(1.0, score / 10));
+                  cand.similarity = Math.max(cand.similarity, llmSimilarity);
                   reRanked.push(cand);
                 }
               }
@@ -338,7 +347,7 @@ You MUST output your response in strict JSON format matching this schema:
             }
 
             topCandidates = reRanked;
-            console.log(`[RAGEngine] LLM Re-ranking complete. Sorted ${topCandidates.length} chunks in ${Math.round(performance.now() - rerankStart)}ms.`);
+            console.log(`[RAGEngine] LLM Re-ranking complete. Sorted ${topCandidates.length} chunks and boosted similarity scores in ${Math.round(performance.now() - rerankStart)}ms.`);
           }
         }
       } catch (err) {
@@ -354,7 +363,7 @@ You MUST output your response in strict JSON format matching this schema:
       const existingIds = new Set(finalChunksBeforeExpansion.map(c => c.id));
       const newlyConnected = connectedChunks
         .filter(c => !existingIds.has(c.id))
-        .map(c => ({ ...c, similarity: 0.4 })); // assign a reasonable similarity proxy
+        .map(c => ({ ...c, similarity: 0.65 })); // assign a reasonable similarity proxy (strongly connected concept)
       console.log(`[RAGEngine] KnowledgeGraph expanded context by ${newlyConnected.length} connected chunk(s) in ${Math.round(performance.now() - kgStart)}ms.`);
       
       const totalTime = Math.round(performance.now() - totalStart);

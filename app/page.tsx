@@ -11,7 +11,7 @@ import MessageBubble from '@/components/chat/message-bubble';
 // CSS classes inject for custom animations and scrollbars
 const GCSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body,#root{height:100%;background:#000000;color:#f4f4f5;font-family:var(--font-geist-sans),-apple-system,BlinkMacSystemFont,sans-serif;font-size:13.5px;-webkit-font-smoothing:antialiased;}
+html,body,#root{height:100%;background:#000000;color:#f4f4f5;font-family:var(--font-geist-sans),-apple-system,BlinkMacSystemFont,sans-serif;font-size:var(--fs-base);-webkit-font-smoothing:antialiased;}
 .nx-scroll::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -110,12 +110,12 @@ function toMessageFile(file: File): MessageFile {
 const ThinkingDots = () => (
   <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
     {[0, 1, 2].map(i => (
-      <span key={i} style={{ 
-        width: 6, 
-        height: 6, 
-        background: "#ffffff", 
-        display: "inline-block", 
-        animation: `nxPulse 1.2s ${i * .2}s infinite` 
+      <span key={i} style={{
+        width: 6,
+        height: 6,
+        background: "#ffffff",
+        display: "inline-block",
+        animation: `nxPulse 1.2s ${i * .2}s infinite`
       }} />
     ))}
   </span>
@@ -144,7 +144,7 @@ const ThinkingMsg = ({ steps, query }: { steps: { step: string; phase?: string }
       marginTop: 2
     }}>
       <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M9.5 0L2 9h5v7l7.5-9H9v-7L9.5 0z"/>
+        <path d="M9.5 0L2 9h5v7l7.5-9H9v-7L9.5 0z" />
       </svg>
     </div>
 
@@ -257,7 +257,7 @@ export default function NexusApp() {
           deepSearch: parsed.deepSearch !== false,
           showTrace: parsed.showTrace !== false,
         });
-      } catch (_) {}
+      } catch (_) { }
     }
   }, []);
 
@@ -530,7 +530,7 @@ export default function NexusApp() {
         try {
           const data = await res.json();
           errMsg = data.error || errMsg;
-        } catch (_) {}
+        } catch (_) { }
         throw new Error(errMsg);
       }
 
@@ -572,9 +572,9 @@ export default function NexusApp() {
 
             try {
               const data = JSON.parse(trimmedLine);
-                if (data.type === "step") {
-                  // Accumulate steps into the running agent trace log
-                  setAgentSteps((prev) => [...prev, { step: data.step, phase: data.phase }]);
+              if (data.type === "step") {
+                // Accumulate steps into the running agent trace log
+                setAgentSteps((prev) => [...prev, { step: data.step, phase: data.phase }]);
               } else if (data.type === "reset") {
                 accumulatedText = "";
                 setMessages((prev) =>
@@ -588,21 +588,21 @@ export default function NexusApp() {
                     m.id === aiMessageId ? { ...m, sources: data.sources } : m
                   )
                 );
-                } else if (data.type === "token") {
-                  setThinking(false); // Clear skeleton when tokens start arriving
-                  setAgentSteps([]);  // Clear trace log — answer is arriving
+              } else if (data.type === "token") {
+                setThinking(false); // Clear skeleton when tokens start arriving
+                setAgentSteps([]);  // Clear trace log — answer is arriving
                 accumulatedText += data.token;
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === aiMessageId
                       ? {
-                          ...m,
-                          html: accumulatedText
-                            .replace(/\n\n/g, "<br/><br/>")
-                            .replace(/\n/g, "<br/>")
-                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                            .replace(/\[(?:Source\s*)?(\d+)\]/gi, "<cite>$1</cite>"),
-                        }
+                        ...m,
+                        html: accumulatedText
+                          .replace(/\n\n/g, "<br/><br/>")
+                          .replace(/\n/g, "<br/>")
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\[(?:Source\s*)?(\d+)\]/gi, "<cite>$1</cite>"),
+                      }
                       : m
                   )
                 );
@@ -632,13 +632,13 @@ export default function NexusApp() {
         prev.map((m) =>
           m.id === aiMessageId
             ? {
-                ...m,
-                followups: [
-                  "Verify structural yield limits",
-                  "Compare stress logs",
-                  "Analyze raw data sources",
-                ],
-              }
+              ...m,
+              followups: [
+                "Verify structural yield limits",
+                "Compare stress logs",
+                "Analyze raw data sources",
+              ],
+            }
             : m
         )
       );
@@ -664,24 +664,24 @@ export default function NexusApp() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#000000", color: "#f4f4f5", overflow: "hidden" }}>
-      
+
       {/* Top Header Selector */}
-      <Header 
-        onToggleSources={() => setShowSources(s => !s)} 
-        onOpenSettings={() => setShowSettings(true)} 
-        sourcesOn={showSources} 
-        messages={messages} 
-        activeNav={activeNav} 
+      <Header
+        onToggleSources={() => setShowSources(s => !s)}
+        onOpenSettings={() => setShowSettings(true)}
+        sourcesOn={showSources}
+        messages={messages}
+        activeNav={activeNav}
       />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}>
-        
+
         {/* Left Sidebar Menu */}
-        <LeftSidebar 
-          activeNav={activeNav} 
-          setActiveNav={setActiveNav} 
-          onOpenSettings={() => setShowSettings(true)} 
-          onNewResearch={handleNewResearch} 
+        <LeftSidebar
+          activeNav={activeNav}
+          setActiveNav={setActiveNav}
+          onOpenSettings={() => setShowSettings(true)}
+          onNewResearch={handleNewResearch}
           conversations={conversations}
           activeConversationId={activeConversationId}
           onSelectConversation={handleSelectConversation}
@@ -695,8 +695,8 @@ export default function NexusApp() {
           {activeNav === "chat" && (
             <>
               {/* Message scroll list */}
-              <div 
-                className="nx-scroll" 
+              <div
+                className="nx-scroll"
                 style={{
                   flex: 1,
                   overflowY: "auto",
@@ -708,7 +708,7 @@ export default function NexusApp() {
               >
                 {/* Centered chat content container to align with screenshot references */}
                 <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
-                  
+
                   {/* Minimal Welcome state */}
                   {messages.length === 0 && (
                     <div style={{
@@ -725,7 +725,7 @@ export default function NexusApp() {
                         <div style={{ width: 18, height: 18, background: "#ffffff", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", color: "#000" }}>
                           <span style={{ fontSize: 9.5, fontWeight: 700, fontFamily: "var(--font-space-grotesk)" }}>⚡</span>
                         </div>
-                        <h2 style={{ fontSize: 13.5, fontWeight: 600, fontFamily: "var(--font-space-grotesk)", color: "#ffffff" }}>
+                        <h2 style={{ fontSize: "var(--fs-heading-md)", fontWeight: 600, fontFamily: "var(--font-space-grotesk)", color: "#ffffff" }}>
                           Synthesis Console
                         </h2>
                       </div>
@@ -737,7 +737,7 @@ export default function NexusApp() {
 
                   {/* Render messages */}
                   {messages.map((m) => (
-                    <MessageBubble 
+                    <MessageBubble
                       key={m.id}
                       message={m}
                       onFollowup={handleSend}
@@ -770,7 +770,7 @@ export default function NexusApp() {
               </div>
 
               {/* Bottom console input */}
-              <InputArea 
+              <InputArea
                 onSend={handleSend}
                 onAttachFiles={handleUploadFiles}
                 documentsCount={documents.length}
@@ -791,12 +791,12 @@ export default function NexusApp() {
           {activeNav === "library" && (
             <div style={{ padding: "30px 40px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 24, height: "100%", width: "100%", fontFamily: "var(--font-space-grotesk)" }}>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 600, color: "#ffffff", marginBottom: 6 }}>Knowledge Base Library</h1>
+                <h1 style={{ fontSize: "var(--fs-heading-lg)", fontWeight: 600, color: "#ffffff", marginBottom: 6 }}>Knowledge Base Library</h1>
                 <p style={{ fontSize: 12.5, color: "#a1a1aa" }}>Manage active papers, documents, and reference resources for this session.</p>
               </div>
 
               {/* Upload Drop Zone */}
-              <div 
+              <div
                 onClick={() => {
                   if (isParsing) return;
                   const input = document.createElement("input");
@@ -847,7 +847,7 @@ export default function NexusApp() {
                 {documents.length > 0 ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
                     {documents.map((doc) => (
-                      <div 
+                      <div
                         key={doc.id}
                         style={{
                           background: "#09090b",
@@ -874,7 +874,7 @@ export default function NexusApp() {
                         </div>
 
                         <div style={{ display: "flex", justifyContent: "flex-end", borderTop: `1px solid rgba(255, 255, 255, 0.08)`, paddingTop: 10 }}>
-                          <button 
+                          <button
                             onClick={() => handleDeleteDocument(doc.id)}
                             style={{
                               background: "transparent",

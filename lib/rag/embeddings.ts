@@ -17,12 +17,12 @@ export class EmbeddingsService {
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    
+
     // Check if a valid, non-placeholder API key is set
-    const hasValidKey = apiKey && 
-                        apiKey.trim() !== "" && 
-                        apiKey !== "your_gemini_api_key_here" && 
-                        apiKey !== "your-key-here";
+    const hasValidKey = apiKey &&
+      apiKey.trim() !== "" &&
+      apiKey !== "your_gemini_api_key_here" &&
+      apiKey !== "your-key-here";
 
     if (hasValidKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
@@ -80,7 +80,7 @@ export class EmbeddingsService {
   private generateFallbackEmbedding(text: string): number[] {
     const dims = 768;
     const vector = new Array<number>(dims).fill(0);
-    
+
     if (!text || text.trim() === "") {
       vector[0] = 1.0;
       return vector;

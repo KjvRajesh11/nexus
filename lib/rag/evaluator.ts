@@ -16,7 +16,7 @@ export interface EvaluationResult {
 }
 
 /** Hard timeout for the evaluator LLM call (milliseconds). */
-const EVALUATOR_TIMEOUT_MS = 12000;
+const EVALUATOR_TIMEOUT_MS = 10000;
 
 /**
  * Evaluates the RAG system quality metrics:
@@ -100,6 +100,7 @@ Determine whether re-searching with different queries would likely improve the a
 STEP 4 — Scoring:
   - faithfulness (0-100): Deduct points per hallucination. 100 = perfectly grounded.
   - answerRelevance (0-100): Deduct points for missed query aspects, off-topic content, or generic filler.
+  - contextRelevance (0-100): Evaluate how relevant the retrieved context sources are to the user query. Deduct points if the context sources are off-topic, contain redundant/duplicate noise, or fail to discuss the key terms of the query.
 
 STEP 5 — Verdict:
   - "pass" if faithfulness >= 80 AND answerRelevance >= 75
@@ -111,6 +112,7 @@ You MUST output your response in strict JSON format matching this schema:
   "justification": "Detailed step-by-step reasoning from Steps 1-5 above.",
   "faithfulness": number,
   "answerRelevance": number,
+  "contextRelevance": number,
   "hallucinations": ["unsupported claim 1", ...],
   "missingInfo": ["missing detail 1", ...],
   "refinementKeywords": ["precise search term 1", ...],
@@ -175,10 +177,12 @@ ${answer}
           else if (faithfulness >= 50 && answerRelevance >= 50) overallVerdict = "partial";
           else overallVerdict = "fail";
         }
+        const llmContextRelevance = Math.max(0, Math.min(100, parsed.contextRelevance ?? 80));
+        const blendedContextRelevance = Math.round(0.4 * contextRelevance + 0.6 * llmContextRelevance);
 
         return {
           faithfulness,
-          contextRelevance: Math.max(0, Math.min(100, contextRelevance)),
+          contextRelevance: blendedContextRelevance,
           answerRelevance,
           explanation: parsed.justification || parsed.explanation || "Evaluation successfully completed.",
           hallucinations: Array.isArray(parsed.hallucinations) ? parsed.hallucinations : [],
