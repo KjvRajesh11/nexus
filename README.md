@@ -1,5 +1,9 @@
 # Nexus – AI Research Assistant
 
+## 🚀 Live Demo
+
+**Try Nexus here:** [https://nexus-virid-nu-28.vercel.app/](https://nexus-virid-nu-28.vercel.app/)
+
 Nexus is a research-focused AI assistant that enables users to upload multiple documents and ask questions across them with transparent citations and quality evaluation. It is built using a modern Retrieval-Augmented Generation (RAG) architecture designed for reliability and verifiability.
 
 ## Problem Statement
