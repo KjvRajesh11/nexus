@@ -48,3 +48,5 @@ next-env.d.ts
 # IDE
 .idea/
 .vscode/
+
+data/nexus-db.json
