@@ -147,6 +147,7 @@ interface MessageBubbleProps {
     role: "user" | "ai";
     text?: string;
     html?: string;
+    userQuery?: string;
     followups?: string[];
     file?: MessageFile;
     sources?: Source[];
@@ -155,6 +156,8 @@ interface MessageBubbleProps {
       contextRelevance: number;
       answerRelevance: number;
       explanation: string;
+      overallVerdict?: "pass" | "partial" | "fail";
+      retryCount?: number;
     };
   };
   onFollowup?: (text: string) => void;
@@ -321,6 +324,62 @@ export default function MessageBubble({
   isParsing = false
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const [feedback, setFeedback] = React.useState<"up" | "down" | null>(null);
+  const [showCorrection, setShowCorrection] = React.useState(false);
+  const [correctionText, setCorrectionText] = React.useState("");
+  const [submittingFeedback, setSubmittingFeedback] = React.useState(false);
+  const [feedbackSent, setFeedbackSent] = React.useState(false);
+
+  const handleFeedbackClick = async (type: "up" | "down") => {
+    if (type === "up") {
+      setFeedback("up");
+      await handleFeedbackSubmit("up");
+    } else {
+      setFeedback("down");
+      setShowCorrection(true);
+    }
+  };
+
+  const submitCorrection = async () => {
+    await handleFeedbackSubmit("down", correctionText);
+    setShowCorrection(false);
+    setCorrectionText("");
+  };
+
+  const handleFeedbackSubmit = async (type: "up" | "down", correction?: string) => {
+    setSubmittingFeedback(true);
+    try {
+      const responseText = message.html?.replace(/<[^>]*>/g, "") || "";
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: message.userQuery || "Preceding query",
+          response: responseText,
+          feedback: type,
+          correction: correction || undefined,
+          evaluation: message.evaluation ? {
+            faithfulness: message.evaluation.faithfulness,
+            contextRelevance: message.evaluation.contextRelevance,
+            answerRelevance: message.evaluation.answerRelevance
+          } : undefined,
+          sources: message.sources ? message.sources.map(s => ({
+            id: s.id,
+            documentName: s.documentName,
+            text: s.text
+          })) : undefined,
+          evaluationVerdict: message.evaluation?.overallVerdict || undefined,
+          retryCount: message.evaluation?.retryCount ?? undefined,
+        }),
+      });
+      setFeedbackSent(true);
+      setTimeout(() => setFeedbackSent(false), 3000);
+    } catch (err) {
+      console.error("[Feedback] Submission failed:", err);
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   const handleBubbleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -461,43 +520,173 @@ export default function MessageBubble({
               {parseMessageContent(message.html || "")}
             </div>
 
-            {/* Micro-interaction controls (Share, Copy, Refresh) */}
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-              {[
-                { k: "copy", label: "Copy", icon: "📋" },
-                { k: "share", label: "Share", icon: "🔗" },
-                { k: "refresh", label: "Retry", icon: "🔄" }
-              ].map((item) => (
+            {/* Micro-interaction controls (Share, Copy, Refresh, Feedback) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", width: "100%", gap: 4, marginTop: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                {[
+                  { k: "copy", label: "Copy", icon: "📋", action: () => navigator.clipboard.writeText(message.html?.replace(/<[^>]*>/g, "") || "") },
+                  { k: "share", label: "Share", icon: "🔗", action: () => {} },
+                  { k: "refresh", label: "Retry", icon: "🔄", action: () => onFollowup && message.userQuery && onFollowup(message.userQuery) }
+                ].map((item) => (
+                  <button
+                    key={item.k}
+                    onClick={item.action}
+                    className="nx-meta"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      fontSize: 10,
+                      color: "#52525b",
+                      padding: "3px 6px",
+                      borderRadius: 3,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      transition: "color 0.15s, background 0.15s"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#a1a1aa";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#52525b";
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <span>{item.icon}</span>
+                    <span style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "0.02em" }}>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Feedback Rating Buttons */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <button
-                  key={item.k}
-                  className="nx-meta"
+                  onClick={() => handleFeedbackClick("up")}
+                  disabled={submittingFeedback}
                   style={{
-                    background: "transparent",
-                    border: "none",
+                    background: feedback === "up" ? "rgba(16, 185, 129, 0.08)" : "transparent",
+                    border: feedback === "up" ? "1px solid rgba(16, 185, 129, 0.25)" : "none",
+                    color: feedback === "up" ? "#10b981" : "#52525b",
                     fontSize: 10,
-                    color: "#52525b",
                     padding: "3px 6px",
                     borderRadius: 3,
-                    cursor: "pointer",
+                    cursor: submittingFeedback ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: 3,
-                    transition: "color 0.15s, background 0.15s"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#a1a1aa";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#52525b";
-                    e.currentTarget.style.background = "transparent";
+                    transition: "all 0.15s"
                   }}
                 >
-                  <span>{item.icon}</span>
-                  <span style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "0.02em" }}>{item.label}</span>
+                  <span>👍</span>
+                  <span style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "0.02em" }}>Helpful</span>
                 </button>
-              ))}
+                <button
+                  onClick={() => handleFeedbackClick("down")}
+                  disabled={submittingFeedback}
+                  style={{
+                    background: feedback === "down" ? "rgba(239, 68, 68, 0.08)" : "transparent",
+                    border: feedback === "down" ? "1px solid rgba(239, 68, 68, 0.25)" : "none",
+                    color: feedback === "down" ? "#ef4444" : "#52525b",
+                    fontSize: 10,
+                    padding: "3px 6px",
+                    borderRadius: 3,
+                    cursor: submittingFeedback ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 3,
+                    transition: "all 0.15s"
+                  }}
+                >
+                  <span>👎</span>
+                  <span style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "0.02em" }}>Flag Issue</span>
+                </button>
+              </div>
             </div>
+
+            {/* Inline Correction Form */}
+            {showCorrection && (
+              <div style={{
+                marginTop: 8,
+                background: "rgba(255, 255, 255, 0.015)",
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                borderRadius: 4,
+                padding: "8px 10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6
+              }}>
+                <div style={{ fontSize: 10, color: "#a1a1aa", fontWeight: 500, fontFamily: "var(--font-space-grotesk)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  Feedback // Correct Reference or Fact
+                </div>
+                <textarea
+                  value={correctionText}
+                  onChange={(e) => setCorrectionText(e.target.value)}
+                  placeholder="E.g., Section 3.2 mentions the yield strength is 320 MPa, not 250 MPa..."
+                  rows={2}
+                  style={{
+                    width: "100%",
+                    background: "#09090b",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 3,
+                    color: "#f4f4f5",
+                    fontSize: 11,
+                    padding: "6px",
+                    outline: "none",
+                    resize: "none",
+                    fontFamily: "var(--font-geist-sans)",
+                    lineHeight: 1.4
+                  }}
+                />
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
+                  <button
+                    onClick={() => { setShowCorrection(false); setFeedback(null); }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#71717a",
+                      fontSize: 10,
+                      cursor: "pointer",
+                      padding: "2px 8px",
+                      fontFamily: "var(--font-space-grotesk)"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitCorrection}
+                    disabled={submittingFeedback}
+                    style={{
+                      background: "#ffffff",
+                      border: "none",
+                      color: "#000000",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: "2px 8px",
+                      borderRadius: 3,
+                      fontFamily: "var(--font-space-grotesk)"
+                    }}
+                  >
+                    {submittingFeedback ? "Submitting..." : "Submit Correction"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {feedbackSent && (
+              <div style={{
+                marginTop: 6,
+                fontSize: 10,
+                color: "#10b981",
+                fontFamily: "var(--font-space-grotesk)",
+                fontWeight: 500,
+                letterSpacing: "0.02em"
+              }}>
+                ✓ Feedback logged. Thank you for making Nexus more trustworthy.
+              </div>
+            )}
 
             {/* RAG evaluation metrics block */}
             {message.evaluation && (

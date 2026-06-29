@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ragGraph } from "@/lib/rag/graph";
-import { evaluateRAG } from "@/lib/rag/evaluator";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -12,9 +11,11 @@ export async function POST(request: NextRequest) {
     const {
       message,
       history = [],
+      settings = { webSearch: true, deepSearch: true },
     }: {
       message: string;
       history?: ChatMessage[];
+      settings?: { webSearch?: boolean; deepSearch?: boolean };
     } = await request.json();
 
     if (!message) {
@@ -24,115 +25,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Chat Route] Invoking RAG LangGraph for query: "${message.substring(0, 50)}..."`);
-
-    // 1. Run LangGraph to perform semantic retrieval and compile system prompt messages
-    const graphState = await ragGraph.invoke({
-      query: message,
-      history: history.map(msg => ({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: msg.content
-      }))
-    });
-
-    const compiledMessages = graphState.messages;
-    const sources = graphState.sources || [];
-
-    console.log(`[Chat Route] Retrieved ${sources.length} sources. Calling Groq...`);
-
-    // 2. Stream generation from Groq API
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: compiledMessages,
-        temperature: 0.6,
-        max_tokens: 2048,
-        stream: true,
-      }),
-    });
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.error("[Groq API] Error:", errText);
-      let errMsg = "AI service error";
-      try {
-        const errJson = JSON.parse(errText);
-        if (errJson.error?.message) {
-          errMsg = errJson.error.message;
-        }
-      } catch (_) {}
-      return NextResponse.json({ success: false, error: errMsg }, { status: groqRes.status });
-    }
+    console.log(`[Chat Route] Starting agentic RAG workflow. Query: "${message.substring(0, 50)}..."`);
+    console.log(`[Chat Route] Active settings:`, settings);
 
     const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
 
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // 2.1. Send the sources payload immediately to the client
-          const sourcesMsg = JSON.stringify({ type: "sources", sources }) + "\n";
-          controller.enqueue(encoder.encode(sourcesMsg));
+          // Define callbacks that stream events back to the client immediately
+          const onToken = (token: string) => {
+            const tokenMsg = JSON.stringify({ type: "token", token }) + "\n";
+            controller.enqueue(encoder.encode(tokenMsg));
+          };
 
-          // 2.2. Stream Groq completion tokens
-          const reader = groqRes.body?.getReader();
-          if (!reader) {
-            throw new Error("Groq response body is not readable");
-          }
+          const onReset = () => {
+            const resetMsg = JSON.stringify({ type: "reset" }) + "\n";
+            controller.enqueue(encoder.encode(resetMsg));
+          };
 
-          let buffer = "";
-          let accumulatedText = "";
+          const onSources = (sources: any[]) => {
+            const sourcesMsg = JSON.stringify({ type: "sources", sources }) + "\n";
+            controller.enqueue(encoder.encode(sourcesMsg));
+          };
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() ?? "";
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed) continue;
-              if (trimmed === "data: [DONE]") continue;
-
-              if (trimmed.startsWith("data: ")) {
-                const jsonStr = trimmed.slice(6);
-                try {
-                  const parsed = JSON.parse(jsonStr);
-                  const token = parsed.choices?.[0]?.delta?.content;
-                  if (token) {
-                    accumulatedText += token;
-                    const tokenMsg = JSON.stringify({ type: "token", token }) + "\n";
-                    controller.enqueue(encoder.encode(tokenMsg));
-                  }
-                } catch (e) {
-                  console.error("Error parsing SSE line:", jsonStr, e);
-                }
-              }
-            }
-          }
-
-          // 2.3. Perform RAG Evaluation in the background and stream the metrics payload
-          console.log("[Chat Route] Answer generation complete. Triggering RAG evaluation...");
-          try {
-            const evaluation = await evaluateRAG(message, sources, accumulatedText);
+          const onEvaluation = (evaluation: any) => {
             const evalMsg = JSON.stringify({ type: "evaluation", evaluation }) + "\n";
             controller.enqueue(encoder.encode(evalMsg));
-            console.log("[Chat Route] RAG evaluation completed and sent.");
-          } catch (evalErr) {
-            console.error("[Chat Route] Evaluation failed:", evalErr);
-          }
+          };
+
+          const onStep = (stepName: string, meta: { phase: string }) => {
+            const stepMsg = JSON.stringify({ type: "step", step: stepName, phase: meta.phase }) + "\n";
+            controller.enqueue(encoder.encode(stepMsg));
+          };
+
+          // Invoke the LangGraph workflow
+          await ragGraph.invoke(
+            {
+              query: message,
+              history: history.map(msg => ({
+                role: msg.role === "assistant" ? "assistant" as const : "user" as const,
+                content: msg.content
+              })),
+              settings,
+              retryCount: 0,
+              feedbackText: ""
+            },
+            {
+              configurable: {
+                onToken,
+                onReset,
+                onSources,
+                onEvaluation,
+                onStep
+              }
+            }
+          );
 
           controller.close();
         } catch (err: unknown) {
-          const errMsg = err instanceof Error ? err.message : "Stream error";
-          console.error("[Stream] Streaming error:", err);
+          const errMsg = err instanceof Error ? err.message : "RAG workflow execution error";
+          console.error("[Chat Route Stream Error] Fail:", err);
           const errorMsg = JSON.stringify({ type: "error", error: errMsg }) + "\n";
           controller.enqueue(encoder.encode(errorMsg));
           controller.close();

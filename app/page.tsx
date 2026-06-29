@@ -69,6 +69,10 @@ cite:hover {
   background-size: 200px 100%;
   animation: nxSkeleton 1.6s infinite linear;
 }
+@keyframes nx-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 `;
 
 export interface MessageFile {
@@ -82,6 +86,7 @@ export interface Message {
   role: "user" | "ai";
   text?: string;
   html?: string;
+  userQuery?: string;
   followups?: string[];
   file?: MessageFile;
   sources?: Array<{ id: number; text: string; documentName?: string }>;
@@ -116,36 +121,102 @@ const ThinkingDots = () => (
   </span>
 );
 
-const ThinkingMsg = ({ query }: { query?: string | null }) => (
+const PHASE_ICONS: Record<string, string> = {
+  rewrite: "✦",
+  retrieve: "⊕",
+  generate: "◈",
+  evaluate: "◉",
+};
+
+const ThinkingMsg = ({ steps, query }: { steps: { step: string; phase?: string }[]; query?: string | null }) => (
   <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0" }} className="nx-fade">
-    {/* AI Square Avatar matching layout */}
-    <div style={{ 
-      width: 22, 
-      height: 22, 
-      background: "#ffffff", 
-      borderRadius: 3, 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center", 
-      color: "#000000", 
-      flexShrink: 0, 
-      marginTop: 2 
+    {/* AI Square Avatar */}
+    <div style={{
+      width: 22,
+      height: 22,
+      background: "#ffffff",
+      borderRadius: 3,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "#000000",
+      flexShrink: 0,
+      marginTop: 2
     }}>
       <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
         <path d="M9.5 0L2 9h5v7l7.5-9H9v-7L9.5 0z"/>
       </svg>
     </div>
 
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
         <ThinkingDots />
-        <span style={{ fontSize: 10.5, color: "#a1a1aa", fontWeight: 500, letterSpacing: "0.04em", fontFamily: "var(--font-space-grotesk)", textTransform: "uppercase" }}>
-          {query ? `Cross-referencing "${query.slice(0, 30)}${query.length > 30 ? "…" : ""}"` : "Synthesizing answer.."}
+        <span style={{
+          fontSize: 10,
+          color: "#52525b",
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          fontFamily: "var(--font-space-grotesk)",
+          textTransform: "uppercase"
+        }}>
+          Agent Trace
         </span>
       </div>
-      <div className="nx-skeleton" style={{ width: "95%", height: 12, borderRadius: 2 }} />
-      <div className="nx-skeleton" style={{ width: "80%", height: 12, borderRadius: 2 }} />
-      <div className="nx-skeleton" style={{ width: "50%", height: 12, borderRadius: 2 }} />
+
+      {/* Step log terminal */}
+      <div style={{
+        background: "rgba(0,0,0,0.25)",
+        border: "1px solid rgba(255,255,255,0.05)",
+        borderRadius: 4,
+        padding: "8px 10px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        maxHeight: 120,
+        overflowY: "auto",
+        fontFamily: "monospace"
+      }}>
+        {steps.length === 0 ? (
+          <span style={{ fontSize: 10, color: "#3f3f46" }}>Initializing workflow...</span>
+        ) : (
+          steps.map((s, i) => {
+            const icon = PHASE_ICONS[s.phase || ""] || "›";
+            const isLatest = i === steps.length - 1;
+            return (
+              <div key={i} style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 6,
+                opacity: isLatest ? 1 : 0.45,
+                transition: "opacity 0.3s"
+              }}>
+                <span style={{ fontSize: 9, color: isLatest ? "#2dd4bf" : "#52525b", flexShrink: 0 }}>{icon}</span>
+                <span style={{
+                  fontSize: 10,
+                  color: isLatest ? "#d4d4d8" : "#71717a",
+                  lineHeight: 1.35
+                }}>{s.step}</span>
+                {isLatest && (
+                  <span style={{
+                    display: "inline-block",
+                    width: 5,
+                    height: 10,
+                    background: "#2dd4bf",
+                    marginLeft: 1,
+                    animation: "nx-blink 1s step-end infinite",
+                    verticalAlign: "middle"
+                  }} />
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Skeleton content preview */}
+      <div className="nx-skeleton" style={{ width: "90%", height: 10, borderRadius: 2 }} />
+      <div className="nx-skeleton" style={{ width: "70%", height: 10, borderRadius: 2 }} />
     </div>
   </div>
 );
@@ -154,7 +225,8 @@ export default function NexusApp() {
   const [conversations, setConversations] = useState<{ id: string; title: string; createdAt: string }[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [thinking, setThinking] = useState<string | null>(null);
+  const [thinking, setThinking] = useState<boolean>(false);
+  const [agentSteps, setAgentSteps] = useState<{ step: string; phase?: string }[]>([]);
   const [activeNav, setActiveNav] = useState("chat");
   const [panelTab, setPanelTab] = useState("Library");
   const [showSources, setShowSources] = useState(true);
@@ -162,6 +234,7 @@ export default function NexusApp() {
   const [activeCitationId, setActiveCitationId] = useState<number | null>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [isParsing, setIsParsing] = useState(false);
+  const [settings, setSettings] = useState({ webSearch: true, deepSearch: true, showTrace: true });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load custom style
@@ -170,6 +243,21 @@ export default function NexusApp() {
       const el = document.createElement("style");
       el.id = "nx-gcss"; el.textContent = GCSS;
       document.head.appendChild(el);
+    }
+  }, []);
+
+  // Load settings on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("nexus_settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSettings({
+          webSearch: parsed.webSearch !== false,
+          deepSearch: parsed.deepSearch !== false,
+          showTrace: parsed.showTrace !== false,
+        });
+      } catch (_) {}
     }
   }, []);
 
@@ -403,7 +491,8 @@ export default function NexusApp() {
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setThinking(trimmed || messageFile?.name || "Ingesting document reference");
+    setThinking(true);
+    setAgentSteps([]);
     setActiveCitationId(null);
 
     try {
@@ -424,16 +513,17 @@ export default function NexusApp() {
           };
         });
 
+      // Read settings from component state directly
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: trimmed || (messageFile ? `[Attached file: ${messageFile.name}]` : ""),
           history: history.slice(0, -1),
+          settings,
         }),
       });
-
-      setThinking(null);
 
       if (!res.ok) {
         let errMsg = "Failed to get response";
@@ -460,6 +550,7 @@ export default function NexusApp() {
           id: aiMessageId,
           role: "ai",
           html: "",
+          userQuery: trimmed,
           followups: [],
           sources: [],
         },
@@ -481,13 +572,25 @@ export default function NexusApp() {
 
             try {
               const data = JSON.parse(trimmedLine);
-              if (data.type === "sources") {
+                if (data.type === "step") {
+                  // Accumulate steps into the running agent trace log
+                  setAgentSteps((prev) => [...prev, { step: data.step, phase: data.phase }]);
+              } else if (data.type === "reset") {
+                accumulatedText = "";
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === aiMessageId ? { ...m, html: "" } : m
+                  )
+                );
+              } else if (data.type === "sources") {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === aiMessageId ? { ...m, sources: data.sources } : m
                   )
                 );
-              } else if (data.type === "token") {
+                } else if (data.type === "token") {
+                  setThinking(false); // Clear skeleton when tokens start arriving
+                  setAgentSteps([]);  // Clear trace log — answer is arriving
                 accumulatedText += data.token;
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -522,6 +625,9 @@ export default function NexusApp() {
         }
       }
 
+      setThinking(false); // Ensure thinking is cleared
+      setAgentSteps([]);
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === aiMessageId
@@ -538,7 +644,8 @@ export default function NexusApp() {
       );
     } catch (error: unknown) {
       console.error("Chat Error:", error);
-      setThinking(null);
+      setThinking(false);
+      setAgentSteps([]);
       setMessages((prev) => [
         ...prev,
         {
@@ -656,7 +763,7 @@ export default function NexusApp() {
                   ))}
 
                   {/* Loading/Thinking wave state */}
-                  {thinking && <ThinkingMsg query={thinking} />}
+                  {thinking && <ThinkingMsg steps={settings.showTrace ? agentSteps : []} query={messages.find(m => m.role === "user")?.text} />}
 
                   <div ref={bottomRef} />
                 </div>
@@ -822,7 +929,7 @@ export default function NexusApp() {
         )}
 
       </div>
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsModal settings={settings} onSettingsChange={setSettings} onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

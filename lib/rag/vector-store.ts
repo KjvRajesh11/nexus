@@ -24,6 +24,7 @@ export interface VectorStore {
   deleteDocument(documentId: string): Promise<void>;
   similaritySearch(queryEmbedding: number[], topK: number): Promise<(Chunk & { similarity: number })[]>;
   listDocuments(): Promise<IngestedDocument[]>;
+  getAllChunks(): Promise<Chunk[]>;
   clear(): Promise<void>;
 }
 
@@ -112,6 +113,11 @@ export class LocalVectorStore implements VectorStore {
   public async listDocuments(): Promise<IngestedDocument[]> {
     const data = this.readData();
     return data.documents;
+  }
+
+  public async getAllChunks(): Promise<Chunk[]> {
+    const data = this.readData();
+    return data.chunks;
   }
 
   public async clear(): Promise<void> {
@@ -231,6 +237,22 @@ export class SupabaseVectorStore implements VectorStore {
     if (error) {
       throw new Error(`[SupabaseVectorStore] Clear DB failed: ${error.message}`);
     }
+  }
+
+  public async getAllChunks(): Promise<Chunk[]> {
+    const { data, error } = await this.client
+      .from("document_chunks")
+      .select("id, document_id, document_name, content");
+    if (error) {
+      throw new Error(`[SupabaseVectorStore] Failed to fetch all chunks: ${error.message}`);
+    }
+    return (data || []).map((row: any) => ({
+      id: row.id || `${row.document_id}_${Math.random()}`,
+      documentId: row.document_id,
+      documentName: row.document_name,
+      text: row.content,
+      embedding: []
+    }));
   }
 }
 
